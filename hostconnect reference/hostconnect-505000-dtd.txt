@@ -1,0 +1,1551 @@
+<!-- hostConnect_5_05_000.dtd -->
+
+
+<!-- Tourplan Pacific Ltd reserves the right to change, modify, add or
+     remove portions of this interface at any time.
+  -->
+
+
+<!-- Request elements -->
+
+
+<!ELEMENT Request (TourplanUser?, BookingUpdateCount?, ServiceLineUpdateCount?,
+   (PingRequest | AgentInfoRequest | OptionInfoRequest | 
+    AddServiceRequest | UpdateServiceRequest | UpdateBookingRequest |
+    AmendServiceRemarksRequest | DeleteServiceRequest | CancelServicesRequest |
+    QuoteToBookRequest | GetBookingRequest | 
+    SetBookingRemarksRequest | RecordBookingPaymentRequest |
+    GetBookingPaymentSummaryRequest |
+    GetBookingMessageRequest | ResequenceRequest | AddDialogueEntryRequest |
+    GetLocationsRequest | GetServicesRequest | SupplierInfoRequest | 
+    ListBookingsRequest | GetAgentSubloginsRequest | AddAgentSubloginRequest |
+    UpdateAgentSubloginRequest | DeleteAgentSubloginRequest | 
+    GetCurrencyConversionsRequest | GetServiceButtonsRequest |
+    GetServiceButtonDetailsRequest | GetSystemSettingsRequest |
+    AcceptServiceRequest | GetSendSupplierMessageRequest | 
+    GetSupplierServiceLinesRequest | 
+    ExternalAirInfoRequest | SupplierUpdateServiceLinesRequest |
+    GetProductSearchDataRequest | GetAccountingMessageRequest | SetServicePriceRequest))>
+
+
+<!ATTLIST Request CompressReply CDATA #IMPLIED RequestId CDATA #IMPLIED ForceStdBookOpRights (Y|N) "N" ReturnWarnings (Y|N) "N" >
+
+
+<!ELEMENT PingRequest EMPTY>
+
+
+<!ELEMENT AgentInfoRequest (AgentID, Password, ReturnAccountInfo?, 
+    ReturnLastReceipt?)>
+
+
+<!ELEMENT OptionInfoRequest (AgentID, Password, 
+    (Opt | OptionNumber | (ButtonName, DestinationName))*, ButtonDestinations?, Info?, 
+    DateFrom?, (DateTo | SCUqty)?, ACache?, RateConvert?, NoteCategory?,
+    LocalityDescription?, ClassDescription?, Description?, SupplierName?, 
+    (RoomConfigs, MinimumAvailability?)?, SortOrder?,
+    IndexFirstOption?, MaximumOptions?, LocationCode?, EndLocationCode?, RatePerScu?,
+    (NoteFormat | NotesInRtf)?, LastUpdateFrom?, LastUpdateTo?,
+    ExternalSearchMode?, (ExternalGetRateRules?, RateId)?,
+    ExternalAllRoomTypes?, PriceSelectionMethod?, PriceCode?, Branch?, Department?, 
+    SalesAnalysis1?, SalesAnalysis2?, SalesAnalysis3?, 
+    SalesAnalysis4?, SalesAnalysis5?, SalesAnalysis6?, PaxBreakChildRates?, 
+    (TranslationMethod, TranslationLanguage?)?,
+    ExternalAvailabilityMode?
+)>
+
+
+<!ELEMENT ButtonDestinations (ButtonDestination+)>
+
+<!ELEMENT ButtonDestination (ButtonName, DestinationName)>
+
+<!ELEMENT SortOrder (SortField+, GroupAfterSort?) >
+
+<!ELEMENT SortField (FieldName, Ascending?) >
+
+<!-- Beginning of ExternalAirInfoRequest -->
+
+
+<!ELEMENT ExternalAirInfoRequest (AgentID, Password, 
+    Info?, (RoomConfigs)?, Branch?, Department?,
+    SalesAnalysis1?, SalesAnalysis2?, SalesAnalysis3?, 
+    SalesAnalysis4?, SalesAnalysis5?, SalesAnalysis6?,  
+    FlightSectors, Token*, RateId?, CreditCardDetails?)>
+
+
+<!ELEMENT FlightSectors (FlightSector+)>
+
+
+<!ELEMENT FlightSector (Origin, Destination, Depart_Date, Depart_Time?, 
+    (Carrier | SupplierCode)+, Flight?, BagCount?, SectorSequence?)>
+
+
+<!-- Beginning of AddServiceRequest -->
+
+
+<!ELEMENT AddServiceRequest (AgentID, Password,
+    (NewBookingInfo | ExistingBookingInfo), 
+    (Opt | OptionNumber | SupplierCode | SupplierId), RateId?,
+    DateFrom, SequenceNumber?,
+    ((Adults, Children?, Infants?, RoomType?) | RoomConfigs), 
+    SCUqty?, OnRequest?, ExtraQuantities?, Consult?, AgentRef?,
+    (Email? | (UDText1?, UDText2?, UDText3?, UDText4?, UDText5?)), 
+    TourplanConsultant?,
+    Pickup_Date?, puTime?, puRemark?, puExternalPointID?, 
+    Dropoff_Date?, doTime?, doRemark?, doExternalPointID?,
+    Remarks?, TourplanServiceStatus?, LocationCode?, ServiceCode?, 
+    DBAnalysisCode1?, DBAnalysisCode2?, DBAnalysisCode3?, 
+    DBAnalysisCode4?, DBAnalysisCode5?, DBAnalysisCode6?, 
+    ServiceLineExpiryDate?, SupplierConfirmation?, SendSupplierMessage?,
+    PriceCode?, InvoiceText1?, InvoiceText2?, InvoiceText3?, InvoiceText4?, MessageFormatType?,
+    VoucherText?, ServiceLineNotes?, (Pricing | AirRouting | ExternalAirRoutings)?,
+    (ExternalRemarks1?, ExternalRemarks2?, 
+     CreditCardDetails?)?, ReturnBookingDetails?, PaymentDetails? )>
+
+
+<!ELEMENT ReturnBookingDetails (ReturnBooking, NoteFormat?, ReturnPackageServices?, ReturnAccountInfo?)>
+
+
+<!ELEMENT NewBookingInfo (Name, NameAlias?, QB, Branch?, Department?, 
+    SalesAnalysis1?, SalesAnalysis2?, SalesAnalysis3?, 
+    SalesAnalysis4?, SalesAnalysis5?, SalesAnalysis6?, 
+    TourplanBookingStatus?, TaxIndicator? )>
+
+
+<!ELEMENT RoomConfigs (RoomConfig+)>
+
+<!ELEMENT RoomConfig (Adults, Children?, Infants?, RoomType?, PaxList?)>
+
+<!ELEMENT PaxList (PaxDetails+)>
+
+<!ELEMENT PaxDetails (PersonId?, Title?, TitleAlias?, Forename?, ForenameAlias?, Surname?, SurnameAlias?, 
+    DateOfBirth?, Age?, PaxType?, PaxText1?, PaxText2?, PaxText3?, PaxText4?, PaxText5?, PaxText6?, PaxText7?, PaxText8?, PaxText9?, PaxText10?)>
+
+<!ELEMENT ExistingBookingInfo ((Ref | BookingId))>
+
+<!ELEMENT ExtraQuantities (ExtraQuantityItem+)>
+
+<!ELEMENT ExtraQuantityItem (SequenceNumber, ExtraQuantity)>
+
+<!ELEMENT ServiceLineNotes (ServiceLineNote+)>
+
+<!ELEMENT ServiceLineNote (NoteCategory, NoteText)>
+
+<!ELEMENT BookingNotes (BookingNote+)>
+
+
+<!ELEMENT BookingNote (NoteCategory, NoteText)>
+
+<!ELEMENT VoucherText (VText1?, VText2?, VText3?, VText4?, 
+    VText5?, VText6?, VText7?, VText8?, VText9?, VText10?, VText11?, VText12?, VText13?, VText14?, 
+    VText15?, VText16?, VText17?, VText18?, VText19?, VText20?)>
+
+<!ELEMENT ExternalAirRoutings (ExternalAirRouting+)>
+
+<!ELEMENT ExternalAirRouting (FlightSectors, Token)>
+
+<!ELEMENT Pricing (ItemDescription?, 
+   CostCurrency, CostConversionRate, CostExclusive, CostTax,
+   (SellExclusive, SellTax)?,
+   AgentCurrency, AgentExclusive, AgentTax,
+   (RetailExclusive, RetailTax)?, ScuFocQty?)>
+
+<!ELEMENT CreditCardDetails (CardHolder, CardNumber, CardType,
+  CardExpiryYear, CardExpiryMonth, CardSecurityCode?)>
+
+<!ELEMENT AirRouting (Plate, External_Ref, Total_Distance, AirRoutingInfo?,
+   Sectors, Tickets) >
+
+<!ELEMENT Sectors (Sector+)>
+
+<!ELEMENT Sector (SectorSequence, Origin, Carrier, Flight, Depart_Date,
+  Arrive_Date, Not_Before?, Not_After?, Stop_Indicator?, Destination, 
+  AircraftType, Distance, AirSectorInfo)>
+
+<!ELEMENT Tickets (Ticket+)>
+
+<!ELEMENT Ticket (TicketId?, Ticket_Number?, Ticket_Sequence, 
+  PaxSequence, Pax1, Pax2, PNR_Ref,
+  Issue_Due, Face_Value, FV_Surcharge, Total_Override, Total_Commission,
+  BSP_Value, Cost, Agent, Retail, Cash_Paid, Credit_Paid, Tax_Estimate,
+  Tax_Actual, Tax_Detail, Ticket_Status, 
+  Ticket_Type, PaxType, Tour_Code, Ticketer, TicketSectors)>
+
+<!ELEMENT TicketSectors (TicketSector+)>
+
+<!ELEMENT TicketSector (SectorSequence, Ticket_Class, Fare_Basis, 
+  Ticket_Sector_Status, Allow, Commission_Rate, Commission,
+  Override_Rate, Override, Agent_OR_Rate?, Agent_OR?, 
+  Agent_Comm_Rate?, Agent_Comm?)>
+
+<!-- End of AddServiceRequest -->
+
+
+<!ELEMENT UpdateServiceRequest (AgentID, Password,
+    (Ref | BookingId), ServiceLineId,
+    DateFrom?, SequenceNumber?,
+    ((Adults, Children?, Infants?, RoomType?) | RoomConfigs)?,  
+    SCUqty?, Pickup_Date?, puTime?, puRemark?, puExternalPointID?, Dropoff_Date?, doTime?, 
+    doRemark?, doExternalPointID?, Remarks?, TourplanServiceStatus?, 
+    DBAnalysisCode1?, DBAnalysisCode2?, DBAnalysisCode3?, 
+    DBAnalysisCode4?, DBAnalysisCode5?, DBAnalysisCode6?, 
+    ServiceLineExpiryDate?, SupplierConfirmation?, 
+    InvoiceText1?, InvoiceText2?,InvoiceText3?, InvoiceText4?, MessageFormatType?,
+    VoucherText?, ServiceLineNotes?, (Pricing)?)>
+
+
+<!ELEMENT UpdateBookingRequest (AgentID, Password, (Ref | BookingId), Name?, NameAlias?,
+    (TourplanOldBookingStatus, TourplanBookingStatus)?, EnteredDate?,
+    Consult?, AgentRef?, 
+    (Email? | (UDText1?, UDText2?, UDText3?, UDText4?, UDText5?)), TourplanConsultant?, 
+    SalesAnalysis1?, SalesAnalysis2?, SalesAnalysis3?, SalesAnalysis4?, SalesAnalysis5?, SalesAnalysis6?, 
+    BookingNotes?, PaymentDetails?, PaxList?)>
+
+
+<!ELEMENT AmendServiceRemarksRequest (AgentID, Password, (Ref | BookingId),
+    (ServiceLineId | (Date, SequenceNumber)), puTime?, puRemark?, puExternalPointID?, 
+    doTime?, doRemark?, doExternalPointID?,    Remarks?)>
+
+
+<!ELEMENT DeleteServiceRequest (AgentID, Password, (Ref | BookingId),
+    (ServiceLineId | (Date, SequenceNumber)), SendSupplierMessage?, ReturnBookingDetails?)>
+
+
+<!ELEMENT CancelServicesRequest (AgentID, Password, (Ref | BookingId), SendSupplierMessage?, 
+    ReturnBookingDetails?)>
+
+
+<!ELEMENT QuoteToBookRequest (AgentID, Password, (Ref | BookingId), SendSupplierMessage?)>
+
+
+<!ELEMENT GetBookingRequest (AgentID, Password, (Ref | BookingId), 
+    ReturnRoomConfigs?, (NoteFormat | NotesInRtf)?, ReturnPackageServices?, ReturnAccountInfo?, (TranslationMethod, TranslationLanguage?)? )>
+
+
+<!ELEMENT SetBookingRemarksRequest (AgentID, Password, (Ref | BookingId), 
+    Remarks)>
+
+
+<!ELEMENT RecordBookingPaymentRequest (AgentID, Password, (Ref | BookingId), 
+    Currency, Amount, ReceiptAmountBookingCurrency?, ReceiptType, UDText1?, UDText2?, UDText3?,
+    TourplanBookingStatus?, MakePaymentInvoiceMode?, ServiceLineIds? )>
+
+
+<!ELEMENT GetBookingPaymentSummaryRequest (AgentID, Password, 
+    (Ref | BookingId))>
+
+
+<!ELEMENT GetBookingMessageRequest (AgentID, Password, (Ref | BookingId), 
+    (MessageCode | MessageLabel), OutputFormat?, Language?)>
+
+
+<!ELEMENT ResequenceRequest (AgentID, Password, (Ref | BookingId), 
+    NewSequence)>
+
+
+<!ELEMENT NewSequence (ServiceLineId+)>
+
+
+<!ELEMENT ServiceLineIds (ServiceLineId+)>
+
+
+<!ELEMENT AddDialogueEntryRequest (AgentID, Password, (Ref | BookingId), 
+    DialogueEntry)>
+
+
+<!ELEMENT GetLocationsRequest (AgentID, Password)>
+
+
+<!ELEMENT GetServicesRequest (AgentID, Password)>
+
+
+<!ELEMENT SupplierInfoRequest ((AgentID | SupplierLogin), Password, 
+    (SupplierCode | SupplierId)*, NoteCategory?, Info?, LocationCode?,
+    (NoteFormat | NotesInRtf)?, (TranslationMethod, TranslationLanguage?)? )>
+
+
+<!ELEMENT ListBookingsRequest (AgentID, Password, Ref?, BookingId?,
+    TravelDateFrom?, TravelDateTo?, EnteredDateFrom?, EnteredDateTo?, 
+    NameContains?, AgentRef?, PNR_Ref?, Currency?, 
+    BookingTypes?, ReturnAccountInfo? )>
+
+
+<!ELEMENT GetAgentSubloginsRequest (AgentID, Password)>
+
+
+<!ELEMENT AddAgentSubloginRequest (AgentID, Password, AgentSublogin, 
+    AgentSubPassword, Name, Title?, Forename?, Surname?, Address1?, 
+    Address2?, Address3?, Address4?, Address5?, PostCode?,ContactPhone?, 
+    MobilePhone?, Fax?, Email?, Indicator1?, Indicator2?, Indicator3?)>
+
+
+<!ELEMENT UpdateAgentSubloginRequest (AgentID, Password, AgentSublogin, 
+    AgentSubPassword?, Name?, Title?, Forename?, Surname?, Address1?, 
+    Address2?, Address3?, Address4?, Address5?, PostCode?,ContactPhone?, 
+    MobilePhone?, Fax?, Email?, Indicator1?, Indicator2?, Indicator3?)>
+
+
+<!ELEMENT DeleteAgentSubloginRequest (AgentID, Password, AgentSublogin)>
+
+
+<!ELEMENT GetCurrencyConversionsRequest (AgentID, Password, ReturnAllSubCodes?)>
+
+
+<!ELEMENT GetServiceButtonsRequest (AgentID, Password)>
+
+
+<!ELEMENT GetServiceButtonDetailsRequest (AgentID, Password, ButtonName,
+    DestinationName?)>
+
+
+<!ELEMENT GetSystemSettingsRequest (AgentID, Password)>
+
+
+<!ELEMENT AcceptServiceRequest (AgentID, Password, (Ref | BookingId),
+    ServiceLineId)>
+
+
+<!ELEMENT GetSendSupplierMessageRequest (AgentID, Password, (Ref | BookingId),
+    ServiceLineId, MessageCode?, SendMethod, OutputFormat?, Language?,
+    TourplanServiceStatus?, (SendToAddress | SendToContactType)?,
+    Subject?)>
+
+
+<!ELEMENT GetSupplierServiceLinesRequest (SupplierLogin, Password, 
+    GetForChain?, (Opt | OptionNumber)?, TravelDateFrom?, TravelDateTo?,
+    EnteredDateFrom?, EnteredDateTo?, TourplanServiceStatuses?, ServiceLineId? )>
+
+
+<!ELEMENT TourplanServiceStatuses (TourplanServiceStatus+)>
+
+
+<!ELEMENT SupplierUpdateServiceLinesRequest (SupplierLogin, Password,
+    SupplierUpdateServiceLines)>
+
+
+<!ELEMENT SupplierUpdateServiceLines (SupplierUpdateServiceLine+)>
+
+
+<!ELEMENT SupplierUpdateServiceLine (ServiceLineId, 
+    SupplierConfirmation?, TourplanServiceStatus?)>
+
+
+<!ELEMENT GetProductSearchDataRequest (AgentID, Password)>
+
+
+<!ELEMENT GetAccountingMessageRequest (AgentID, Password, (Ref | BookingId),
+    MessageCode, TransactionId, OutputFormat?, Language?)>
+
+
+<!ELEMENT SetServicePriceRequest (AgentID, Password, (Ref | BookingId), ServiceLineId, LinePrice, AgentPrice)>
+
+
+<!-- Reply elements -->
+
+
+<!ELEMENT Reply (ErrorReply | ((PingReply | AgentInfoReply | OptionInfoReply |
+    AddServiceReply | UpdateServiceReply | UpdateBookingReply |
+    AmendServiceRemarksReply | DeleteServiceReply | CancelServicesReply | 
+    QuoteToBookReply | GetBookingReply |
+    SetBookingRemarksReply | RecordBookingPaymentReply |
+    GetBookingPaymentSummaryReply |
+    GetBookingMessageReply | ResequenceReply | AddDialogueEntryReply |
+    GetLocationsReply | GetServicesReply | SupplierInfoReply |
+    ListBookingsReply | GetAgentSubloginsReply | AddAgentSubloginReply |
+    UpdateAgentSubloginReply | DeleteAgentSubloginReply |
+    GetCurrencyConversionsReply | GetServiceButtonsReply |
+    GetServiceButtonDetailsReply | GetSystemSettingsReply | 
+    AcceptServiceReply | GetSendSupplierMessageReply |
+    GetSupplierServiceLinesReply | ExternalAirInfoReply | 
+    SupplierUpdateServiceLinesReply | GetProductSearchDataReply |
+    GetAccountingMessageReply | SetServicePriceReply), Warnings?,
+    BookingUpdateCount?, ServiceLineUpdateCount?, ServiceUpdateCounts?))>
+
+
+<!ELEMENT Warnings (Warning+)>
+
+<!ELEMENT ServiceUpdateCounts (ServiceUpdateCount*)>
+
+<!ELEMENT ServiceUpdateCount (ServiceLineId, ServiceLineUpdateCount)>
+
+<!ELEMENT ErrorReply (Error, ErrorData?)>
+
+<!ELEMENT PingReply (Version, Backend)>
+
+<!ELEMENT AgentInfoReply (Currency, CurrencySubCode?, Email, Language, Name, 
+    PriceCodes, IsSubLogin?, HasBookingRights?,
+    (UDText1, UDText2, UDText3, UDText4, UDText5, UDText6, UDText7, UDText8,
+     UDText9, UDText10, UDText11, UDText12, UDText13, UDText14, UDText15, UDText16, UDText17, UDText18,
+     UDText19, UDText20)?, AgentCurrencies?, Balances? )>
+
+
+<!ELEMENT AgentCurrencies (AgentCurrencyInfo+)>
+
+<!ELEMENT AgentCurrencyInfo (Currency, CreditLimit, LastReceiptAmount?, 
+    LastReceiptDate?)>
+
+<!ELEMENT Balances (Balance+)>
+
+<!ELEMENT Balance (Currency, CurrentBalance, Overdue1, Overdue2, Overdue3,
+  Overdue4, FutureEntered, Future1, Future2, Future3, Future4)>
+
+
+<!-- Begin OptionInfoReply -->
+
+
+<!ELEMENT OptionInfoReply (Option*)>
+
+<!ELEMENT Option (Opt, OptionNumber, OptGeneral?, OptRates?, OptDateRanges?,
+    OptAvail?, OptDetailedAvails?, OptFullAvails?, OptEnquiryNotes?, OptionNotes?,
+    OptStayResults*, FYIs?, Amenities?, SupplierLocations?, PickupPoints?, ValidLocations?,
+    PackageDetails? )>
+
+<!ELEMENT ValidLocations (LocationCode*)>
+
+<!ELEMENT OptGeneral (SupplierId, SupplierName, Description, Description2, Comment?, Comment2?, 
+    Locality?, LocalityDescription?, Class?, ClassDescription?, Periods?,
+    MoreInformationURL?, SType, MPFCU?, (SCU, MinSCU, MaxSCU)?, 
+    OptExtras?,
+    VoucherName, Address1, Address2, Address3, Address4, Address5, PostCode,
+    (Single_Avail, (Single_Ad_Max, Single_Max?, Single_Max_With_Infants?)?,
+    Twin_Avail, (Twin_Ad_Max, Twin_Max?, Twin_Max_With_Infants?)?,
+    Double_Avail, (Double_Ad_Max, Double_Max?, Double_Max_With_Infants?)?,
+    Triple_Avail, (Triple_Ad_Max, Triple_Max?, Triple_Max_With_Infants?)?,
+    Quad_Avail, (Quad_Ad_Max, Quad_Max?, Quad_Max_With_Infants?)?)?,
+    (Pax_Ad_Min, Pax_Min, Pax_Min_With_Infants)?,
+    (Pax_Ad_Max, Pax_Max, Pax_Max_With_Infants)?,
+    (InfantsAllowed, (Infant_From, Infant_To)?, CountInfantsInPaxBreak?), 
+    (ChildrenAllowed, (Child_From, Child_To)?, CountChildrenInPaxBreak?), 
+    (AdultsAllowed, (Adult_From, Adult_To)?), PromptForPuDo, ButtonName, 
+    (DBAnalysisCode1, DBAnalysisDescription1)?, (DBAnalysisCode2, DBAnalysisDescription2)?, 
+    (DBAnalysisCode3, DBAnalysisDescription3)?, (DBAnalysisCode4, DBAnalysisDescription4)?, 
+    (DBAnalysisCode5, DBAnalysisDescription5)?, (DBAnalysisCode6, DBAnalysisDescription6)?, 
+    LastUpdate)>
+
+
+<!ELEMENT OptExtras (OptExtra*)>
+
+<!ELEMENT OptExtra (SequenceNumber, Description, IsPricePerPerson, ChargeBasis, IsCompulsory)>
+
+<!ELEMENT OptRates (Currency, PaxBreaks?, MinSCU?, Availability?, CancelHours?, CancelPolicies?,
+    LastBookableDate?, SaleFrom?, SaleTo?, PriceCode?, OptRate*)>
+
+<!ELEMENT PaxBreaks (PaxBreak+)>
+
+<!ELEMENT OptRate (Date?, RateName?, RateName2?, RateText?, RateText2?, ValueAdds?, FreeOfCharge?, Availability?,
+    CancelHours?, (SellBeforeTravel, SellBeforeType)?, CommissionPercent?,
+    ((OptionRates | PersonRates | RoomRates), ExtrasRates?)?)>
+
+<!ELEMENT RoomRates (SingleRate?, DoubleRate?, TwinRate?, TripleRate?,
+    QuadRate?, ExtraAdultRate?, ExtraChildRate*, InfantRate*, AdultRate* )>
+
+<!ELEMENT PersonRates (AdultRate+, ChildRate*, InfantRate*)>
+
+<!ELEMENT OptionRates (OptionRate+, ChildRate*, InfantRate*)>
+
+<!ELEMENT ExtrasRates (ExtrasRate*)>
+
+<!ELEMENT ExtrasRate (SequenceNumber, FreeOfCharge?,
+    ((AdultRate, ChildRate?, InfantRate?) | ExRate))>
+
+<!ELEMENT OptDateRanges (PaxBreaks?, PeriodCancelPolicies?, OptDateRange*)>
+
+<!ELEMENT OptDateRange (PriceCode?, DateFrom, DateTo, SaleFrom?, SaleTo?, Currency, 
+  (SellBeforeTravel, SellBeforeType)?, RateSets)>
+
+<!ELEMENT RateSets (RateSet*)>
+
+
+<!ELEMENT RateSet (RateName, RateName2?, RateText?, RateText2?, ValueAdds?, MinSCU, MaxSCU, 
+   AppliesDaysOfWeek?, IsClosed, (ScuCheckOverlapOnly, CancelHours, 
+   StayPays?, OptRate, ExtraNightRates?)? )>
+
+<!ELEMENT StayPays (StayPayType, RepeatTimes?, ChargedExtras?, StayPay*)>
+
+<!ELEMENT StayPay (Stay, Pay)>
+
+<!ELEMENT ChargedExtras (SequenceNumber*)>
+
+<!ELEMENT ExtraNightRates ((OptionRates | PersonRates | RoomRates))>
+
+<!ELEMENT AppliesDaysOfWeek EMPTY>
+
+<!ATTLIST AppliesDaysOfWeek Mon CDATA #IMPLIED Tue CDATA #IMPLIED 
+  Weds CDATA #IMPLIED Thur CDATA #IMPLIED Fri CDATA #IMPLIED
+  Sat CDATA #IMPLIED Sun CDATA #IMPLIED>
+
+
+<!ELEMENT OptDetailedAvails (OptDetailedAvail*)>
+
+<!ELEMENT OptDetailedAvail (UnitType, OptAvail)>
+
+<!ELEMENT OptFullAvails (OptFullAvail*)>
+
+<!ELEMENT OptFullAvail ((UnitType | (ExtOptionDescr, ExtRatePlanDescr)), AvailDate*)>
+
+<!ELEMENT AvailDate (Date, Availability)>
+
+<!ELEMENT OptionNotes (OptionNote+)>
+
+<!ELEMENT OptionNote (NoteCategory, NoteText, LastUpdate)>
+
+<!ELEMENT OptStayResults (Availability, (Currency, TotalPrice, CommissionPercent, AgentPrice,
+  RateId, RateName, RateName2?, RateText?, RateText2?, PeriodValueAdds?, MinSCU?, (Stay, Pay)?, CancelHours?, CancelPolicies?, 
+  LastBookableDate?, SaleFrom?, SaleTo?, Prefer?, ExternalRateDetails?, PriceCode?, RoomList?)?)>
+
+
+<!ELEMENT RoomList (RoomType+)>
+
+<!ELEMENT PeriodValueAdds (PeriodValueAdd+)>
+
+<!ELEMENT PeriodValueAdd (DateFrom, DateTo, RateName, RateName2?, RateText?, RateText2?, ValueAdds?)>
+
+<!ELEMENT ValueAdds (ValueAdd+)>
+
+<!ELEMENT ValueAdd (Type, Description)>
+
+<!ATTLIST Type Number CDATA #IMPLIED>
+
+<!ELEMENT ExternalRateDetails (ExtSupplierId?, ExtOptionId, ExtOptionDescr?,
+   ExtRatePlanCode, ExtRatePlanDescr?, ExtGuarantee?, CancelPolicies?, 
+   AdditionalDetails?, DepotDetail?, ExternalPerDayList?,
+   ExtStartTimes?, ExtPickupDetails?, ExtDropoffDetails? )>
+
+
+<!ELEMENT ExtStartTimes (ExtStartTime*)>
+
+<!ELEMENT ExtPickupDetails (ExtPickupDetail*)>
+<!ELEMENT ExtPickupDetail (ExtPointName, MinutesPrior?, Address?, ExtPointInfo?)>
+
+
+<!ELEMENT ExtDropoffDetails (ExtDropoffDetail*)>
+<!ELEMENT ExtDropoffDetail (ExtPointName, MinutesPrior?, Address?, ExtPointInfo?)>
+
+
+<!ELEMENT AdditionalDetails (AdditionalDetail+)>
+
+<!ELEMENT AdditionalDetail (DetailName, DetailDescription)>
+
+<!ELEMENT PeriodCancelPolicies (PeriodCancelPolicy+)>
+
+<!ELEMENT PeriodCancelPolicy (DateFrom, DateTo, CancelPolicies)>
+
+<!ELEMENT CancelPolicies (CancelPenalty+)>
+
+
+<!ELEMENT CancelPenalty (Deadline?, 
+    (PenaltyDescription 
+    | (CancelRuleType, CancelRuleUnits?, (MinBooked, MaxBooked, BookedUnitType)?, (MinSCU, MaxSCU)?) 
+    | (InEffect, LinePrice, AgentPrice?, SellPrice?))?)>
+
+
+<!ELEMENT Deadline ((OffsetUnitMultiplier, OffsetTimeUnit, DeadlineDateTime?) | 
+    (DeadlineDate?, DeadlineTime))>
+
+
+<!ELEMENT PackageDetails (PackageServiceLine+)>
+
+
+<!ELEMENT PackageServiceLine (DayNumber, SequenceNumber, SCUqty, OptionNumber, 
+    Opt, Availability?, IsOptional)>
+
+
+<!ELEMENT DepotDetail (PickupDetail, DropoffDetail)>
+
+<!ELEMENT PickupDetail (LocationCode, Point_ID, ExternalDepotID, PointDescription, GroupNumber)>
+
+<!ELEMENT DropoffDetail (LocationCode, Point_ID, ExternalDepotID, PointDescription, GroupNumber)>
+
+<!ELEMENT ExternalPerDayList (Currency, ExternalPerDay+)>
+
+<!ELEMENT ExternalPerDay (Date, Availability, ExternalRate)>
+
+
+<!-- End OptionInfoReply -->
+
+
+<!-- Begin ExternalAirInfoReply -->
+<!ELEMENT ExternalAirInfoReply (FlightRouting*)>
+
+<!ELEMENT FlightRouting (FlightSectorResults+, AirFare*)>
+
+
+<!ELEMENT FlightSectorResults (Origin, Destination, Depart_Date, Depart_Time?, 
+    Carrier, SupplierCode, Flight?, Arrive_Date?, Arrive_Time?, OriginTerminal?, 
+    DestinationTerminal?, AircraftType?, FlightDuration?, BagCount?, SectorSequence, AirFare*)>
+
+
+<!ELEMENT AirFare (FareCode, FareName?, RateId?, PlatingCarrier?, SupplierCode?, CabinClass?, Currency,
+    TotalRateAmount, TotalRateTax, TotalAgentAmount, TotalAgentTax, CommissionPercent, BaggageCount?, 
+    BaggageWeight?, FareAmount*, Token*, FareRule*)>
+
+
+<!ELEMENT FareAmount (AppliesTo, AmountType, AmountCode, RateAmount, AgentAmount, Commissionable, Token*)>
+
+
+<!ELEMENT FareRule (RuleAppliesTo, RuleType?, RuleCategory?, RuleBody)>
+
+
+<!-- End ExternalAirInfoReply -->
+
+
+<!ELEMENT AddServiceReply ((BookingId, Ref)?, 
+  (ServiceLineId, SequenceNumber)?, Status, AirTicketIds?, SubServiceLineIds?, (Services | GetBookingReply)?,
+  (MessageDetails | SupplierMessageError)?)>
+
+
+<!ELEMENT AirTicketIds (AirTicketId+)>
+
+
+<!ELEMENT AirTicketId (Ticket_Sequence, TicketId)>
+
+
+<!ELEMENT SubServiceLineIds (SubServiceLineId*)>
+
+
+<!ELEMENT UpdateServiceReply (SequenceNumber)>
+
+
+<!ELEMENT UpdateBookingReply (TourplanBookingStatus?)>
+
+
+<!ELEMENT AmendServiceRemarksReply EMPTY>
+
+
+<!ELEMENT DeleteServiceReply (BookingId, Ref, ServiceLineId, Status,
+    CancelPenaltyServiceLineId?, DeleteRefusalReason?, GetBookingReply?)>
+
+
+<!ELEMENT CancelServicesReply (BookingId, Ref, ServiceStatuses, GetBookingReply?)>
+
+
+<!ELEMENT ServiceStatuses (ServiceStatus*)>
+
+
+<!ELEMENT ServiceStatus (ServiceLineId, Date, SequenceNumber, Status, 
+    (CancelPenaltyServiceLineId | CancelledServiceLineId)?)>
+
+
+<!ELEMENT QuoteToBookReply (Ref, ServiceStatuses)>
+
+
+<!ELEMENT GetBookingReply (BookingId, Ref, BookingUpdateCount?, Name, NameAlias, QB,
+    Consult, AgentRef, Email, (TourplanBookingStatus, UDText1, UDText2, 
+    UDText3, UDText4, UDText5, TourplanConsultant)?,
+    SalesAnalysis1?, SalesAnalysis2?, SalesAnalysis3?, 
+    SalesAnalysis4?, SalesAnalysis5?, SalesAnalysis6?, 
+    TaxIndicator?, TravelDate, EnteredDate, BookingStatus, ReadOnly, CanAddServices,
+    CanCancel, BookingType, IsInternetBooking, Currency, TotalPrice, AgentPrice?, Remarks, 
+    Dialogue, BookingNotes?, AccountingDetails?, Services?, PaymentDetails? )>
+
+
+<!ELEMENT Services (Service*)>
+
+
+<!ELEMENT PaymentDetails (((DepositDueAmount, DepositDueDate)?, FinalPaymentDate)?)>
+
+
+<!ELEMENT Service (ServiceLineId, ServiceLineUpdateCount?,
+    ((Opt?, OptionNumber) | (SupplierCode?, SupplierId)),
+    Date, SequenceNumber, 
+    ((Adults, Children, Infants, RoomType?) | RoomConfigs), 
+    CostedInBooking, LinePrice, AgentPrice?, (SellCurrency, SellPrice)?,
+    SCU?, SCUqty, Pickup_Date?, puTime?, 
+    puRemark?, puExternalPointID?, Dropoff_Date?, doTime?, doRemark?, doExternalPointID?, Remarks?, 
+    SupplierName, Description, Description2, Comment?, Comment2?, CancelDeleteStatus, CanUpdate,
+    CanAccept, PriceCode?, TourplanServiceStatus?, ServiceCategory?,
+    LocationCode?, ServiceCode?, 
+    DBAnalysisCode1?, DBAnalysisCode2?, DBAnalysisCode3?, 
+    DBAnalysisCode4?, DBAnalysisCode5?, DBAnalysisCode6?, 
+    Voucher_Status?, ServiceLineExpiryDate?, SupplierConfirmation?,
+    InvoiceText1?, InvoiceText2?, InvoiceText3?, InvoiceText4?, MessageFormatType?, LinkedServiceLineId?,
+    VoucherText?, Status?,
+    (HeaderServiceLineId, (ParentServiceLineId, PackageLineId, IsStandardPackageLine)?)?, 
+    SubServiceLineIds?, CancelPolicies?, (CancelPenaltyServiceLineId | CancelledServiceLineId)?,
+    ServiceLineNotes?, (Pricing | AirRouting)?, ServiceExtras?, ExternalServiceDetails?)>
+
+
+<!ELEMENT ServiceExtras (ServiceExtra+)>
+
+
+<!ELEMENT ServiceExtra (SequenceNumber, Quantity, (Description, IsPricePerPerson, ChargeBasis, IsCompulsory)?)>
+
+
+<!ELEMENT ExternalServiceDetails (ExtSupplierId, ExtOptionId, ExtOptionDescr,
+   ExtRatePlanCode, ExtRatePlanDescr, CancelPolicies?, AdditionalDetails? )>
+
+
+<!ELEMENT SetBookingRemarksReply EMPTY>
+
+
+<!ELEMENT RecordBookingPaymentReply (ReceiptReference)>
+
+
+<!ELEMENT GetBookingPaymentSummaryReply (Currency, InvoicedExclusive, 
+    InvoicedTax, CreditsExclusive, CreditsTax, ReceivedExclusive,
+    ReceivedTax, RetailExclusive, RetailTax, AgentExclusive, AgentTax )>
+
+
+<!ELEMENT GetBookingMessageReply (OutputFormat, Message)>
+
+
+<!ELEMENT ResequenceReply (LineSequenceNumbers)>
+
+
+<!ELEMENT LineSequenceNumbers (LineSequenceNumber+)>
+
+
+<!ELEMENT LineSequenceNumber (ServiceLineId, SequenceNumber)>
+
+
+<!ELEMENT AddDialogueEntryReply (Dialogue)>
+
+
+<!ELEMENT GetLocationsReply (Locations)>
+
+
+<!ELEMENT Locations (Location+)>
+
+
+<!ELEMENT Location (Code, Name)>
+
+
+<!ELEMENT GetServicesReply (TPLServices)>
+
+
+<!ELEMENT TPLServices (TPLService+)>
+
+
+<!ELEMENT TPLService (Code, Name)>
+
+
+<!ELEMENT SupplierInfoReply (Suppliers)>
+
+
+<!ELEMENT Suppliers (Supplier+)>
+
+
+<!ELEMENT Supplier (SupplierId, SupplierCode, Name, Address1, Address2, 
+    Address3, Address4, Address5, PostCode, 
+    (SupplierAnalysis1, SupplierAnalysisDescription1)?, (SupplierAnalysis2, SupplierAnalysisDescription2)?,
+    (SupplierAnalysis3, SupplierAnalysisDescription3)?, (SupplierAnalysis4, SupplierAnalysisDescription4)?,
+    (SupplierAnalysis5, SupplierAnalysisDescription5)?, (SupplierAnalysis6, SupplierAnalysisDescription6)?,
+    LastUpdate, Phone?, Fax?,
+    Email?, Web?, SupplierNotes?, FYIs?, Amenities?, SupplierLocations? )>
+
+
+<!ELEMENT SupplierLocations (SupplierLocation*)>
+
+
+<!ELEMENT SupplierLocation (LocationCode, PickupPoints?)>
+
+
+<!ELEMENT PickupPoints (PickupPoint*)>
+
+
+<!ELEMENT PickupPoint (Point_ID, PointDescription, CanPickup, CanDropoff, ExternalSearch, GroupNumber, 
+    ExternalDepotID, puTime, doTime)>
+
+
+<!ELEMENT SupplierNotes (SupplierNote+)>
+
+
+<!ELEMENT SupplierNote (NoteCategory, NoteText, LastUpdate )>
+
+
+<!ELEMENT FYIs (FYI+)>
+
+
+<!ELEMENT FYI (DateFrom, DateTo, FYIText)>
+
+
+<!ELEMENT Amenities (Amenity*)>
+
+
+<!ELEMENT Amenity (AmenityLevel, AmenityCode?, AmenityCategory, 
+    AmenityDescription)>
+
+
+<!ELEMENT ListBookingsReply (BookingHeaders?)>
+
+
+<!ELEMENT BookingHeaders (BookingHeader+)>
+
+
+<!ELEMENT BookingHeader (BookingId, Ref, Name, NameAlias, QB, Consult, AgentRef, 
+    TravelDate, EnteredDate, BookingStatus, BookingType, IsInternetBooking, 
+    Currency, TotalPrice, AgentPrice?, AccountingDetails? )>
+
+
+<!ELEMENT AccountingDetails (InvoicedTotal, ReceivedTotal, CreditsTotal, 
+  AmountDue, FutureBilling, Transactions?)>
+
+
+<!ELEMENT Transactions (Transaction+)>
+
+
+<!ELEMENT Transaction (TransactionId, Date, TransactionRef, RelatedRef,
+    TransactionType, Amount)>
+
+
+
+
+<!ELEMENT GetAgentSubloginsReply (Sublogins?)>
+
+
+<!ELEMENT Sublogins (Sublogin+)>
+
+
+<!ELEMENT Sublogin (AgentID, Name, Title?, Forename?, Surname?, Address1?, 
+    Address2?, Address3?, Address4?, Address5?, PostCode?, ContactPhone?, 
+    MobilePhone?, Fax?, Email?, Indicator1?, Indicator2?, Indicator3?)>
+
+
+<!ELEMENT AddAgentSubloginReply EMPTY>
+
+
+<!ELEMENT UpdateAgentSubloginReply EMPTY>
+
+
+<!ELEMENT DeleteAgentSubloginReply EMPTY>
+
+
+<!ELEMENT GetCurrencyConversionsReply (AllCurrencyConversions)>
+
+
+<!ELEMENT AllCurrencyConversions (CurrencyConversionSet+)>
+
+
+<!ELEMENT CurrencyConversionSet (FromCurrency, ToCurrency, CurrencySubCode,
+    CurrencyConversions)>
+
+
+<!ELEMENT CurrencyConversions (CurrencyConversion+)>
+
+
+<!ELEMENT CurrencyConversion (DateFrom, DateTo, ConversionRate, IsMultiplier)>
+
+
+<!ELEMENT GetServiceButtonsReply (ButtonNames)>
+
+
+<!ELEMENT ButtonNames (ButtonName*)>
+
+
+
+
+<!ELEMENT GetServiceButtonDetailsReply (Countries, ScuPrompt?,
+    RoomBased, ClassLabel, LocalityLabel, RemarksDetails, 
+    DisplayOptionsWithZeroRates?, 
+    (DestinationName, LocalityDescriptions?, ClassDescriptions?, CodeTables?)?)>
+
+
+<!ELEMENT LocalityDescriptions (LocalityDescription*)>
+
+
+<!ELEMENT ClassDescriptions (ClassDescription*)>
+
+
+<!ELEMENT CodeTables (CodeTable+)>
+
+
+<!ELEMENT CodeTable (CodeTableType, CodeTableEntries)>
+
+
+<!ELEMENT CodeTableEntries (CodeTableEntry+)>
+
+
+<!ELEMENT CodeTableEntry (Code, Description)>
+
+
+<!ELEMENT RemarksDetails (PickupLabel, PickupTimeAllowed, PickupRemarksAllowed,
+    DropoffLabel, DropoffTimeAllowed, DropoffRemarksAllowed, 
+    RemarksLabel, RemarksAllowed)>
+
+
+
+
+<!ELEMENT GetSystemSettingsReply (QuotesEnabled, 
+    AvailableMessages, IsAgentDialogueEnabled, Countries, 
+    BookingStatuses)>
+
+
+<!ELEMENT Countries (Country*)>
+
+
+<!ELEMENT Country (CountryName, DestinationNames)>
+
+
+<!ELEMENT DestinationNames (DestinationName*)>
+
+
+<!ELEMENT AvailableMessages (QuoteMessageLabel*, BookingMessageLabel*)>
+
+
+<!ELEMENT BookingStatuses (BookingStatus*)>
+
+
+<!ELEMENT AcceptServiceReply EMPTY>
+
+
+<!ELEMENT GetSendSupplierMessageReply (MessageDetails, Status, 
+  TourplanServiceStatus)>
+
+
+<!ELEMENT MessageDetails (MessageCode, SendMethod, 
+  (Subject, OutputFormat, Message)?, SendToAddress?)>
+
+
+<!ELEMENT GetSupplierServiceLinesReply (SupplierServiceLines?) >
+
+
+<!ELEMENT SupplierServiceLines (SupplierServiceLine+) >
+
+
+<!ELEMENT SupplierServiceLine (BookingId, Ref, BranchName, DepartmentName,
+  TourplanBookingStatus, Name, AgentCode, AgentName, AgentRef,
+  UDText1, UDText2, UDText3, UDText4, UDText5, TourplanConsultantName, TourplanConsultantEmail,
+  ServiceLineId, SupplierCode, SupplierId, SupplierName, LocationCode,
+  (Opt, OptionNumber, Description, Description2, Comment, Comment2)?, 
+  Date, EnteredDate, SCUqty, Adults, Children, Infants,
+  SingleCount, TwinCount, DoubleCount, TripleCount, QuadCount, OtherCount,
+  TourplanServiceStatus, PriceCode, RateText, RateText2,
+  CostCurrency, CostExclusive, CostTax, ServiceExtras?, SupplierConfirmation,
+  Pickup_Date, puTime, puRemark, Dropoff_Date, doTime, doRemark, Remarks) >
+
+
+<!ELEMENT SupplierUpdateServiceLinesReply (SupplierUpdatedServices?, 
+    SupplierFailedServiceUpdates?)>
+
+
+<!ELEMENT SupplierUpdatedServices (ServiceLineId+)>
+
+
+<!ELEMENT SupplierFailedServiceUpdates (SupplierFailedServiceUpdate+)>
+
+
+<!ELEMENT SupplierFailedServiceUpdate (ServiceLineId,
+  UpdateFailureCode, UpdateFailurereason)>
+
+
+<!-- Start GetProductSearchDataReply elements -->
+
+
+<!ELEMENT GetProductSearchDataReply (CodeTables, CountryList, ServiceButtons)>
+
+
+<!ELEMENT CountryList (CountryInfo*)>
+
+
+<!ELEMENT CountryInfo (CountryCode, DestinationCode*)>
+
+
+<!ELEMENT ServiceButtons (ServiceButton*)>
+
+
+<!ELEMENT ServiceButton (ButtonName, ScuPrompt?, RoomBased, ClassLabel, LocalityLabel, RemarksDetails, 
+    DisplayOptionsWithZeroRates?, ButtonCountries)>
+
+
+<!ELEMENT ButtonCountries (ButtonCountry*)>
+
+
+<!ELEMENT ButtonCountry (CountryCode, DestinationList)>
+
+
+<!ELEMENT DestinationList (DestinationInfo*)>
+
+
+<!ELEMENT DestinationInfo (DestinationCode, CodeLists)>
+
+
+<!ELEMENT CodeLists (CodeList*)>
+
+
+<!ELEMENT CodeList (CodeTableType, Code*)>
+
+
+<!ELEMENT GetAccountingMessageReply (OutputFormat, Message)>
+
+
+<!ELEMENT SetServicePriceReply EMPTY>
+
+
+<!-- Parsed data fields, listed in alphabetical order -->
+
+
+<!ELEMENT ACache (#PCDATA)>
+<!ELEMENT Address (#PCDATA)>
+<!ELEMENT Adult_From (#PCDATA)>
+<!ELEMENT Adult_To (#PCDATA)>
+<!ELEMENT AdultRate (#PCDATA)>
+<!ELEMENT Address1 (#PCDATA)>
+<!ELEMENT Address2 (#PCDATA)>
+<!ELEMENT Address3 (#PCDATA)>
+<!ELEMENT Address4 (#PCDATA)>
+<!ELEMENT Address5 (#PCDATA)>
+<!ELEMENT Adults (#PCDATA)>
+<!ELEMENT AdultsAllowed (#PCDATA)>
+<!ELEMENT Age (#PCDATA)>
+<!ELEMENT Agent (#PCDATA)>
+<!ELEMENT Agent_OR_Rate (#PCDATA)>
+<!ELEMENT Agent_OR (#PCDATA)>
+<!ELEMENT Agent_Comm_Rate (#PCDATA)>
+<!ELEMENT Agent_Comm (#PCDATA)>
+<!ELEMENT AgentAmount (#PCDATA)>
+<!ELEMENT AgentCode (#PCDATA)>
+<!ELEMENT AgentCurrency (#PCDATA)>
+<!ELEMENT AgentExclusive (#PCDATA)>
+<!ELEMENT AgentID (#PCDATA)>
+<!ELEMENT AgentName (#PCDATA)>
+<!ELEMENT AgentPrice (#PCDATA)>
+<!ELEMENT AgentRef (#PCDATA)>
+<!ELEMENT AgentSublogin (#PCDATA)>
+<!ELEMENT AgentSubPassword (#PCDATA)>
+<!ELEMENT AgentTax (#PCDATA)>
+<!ELEMENT AirRoutingInfo (#PCDATA)>
+<!ELEMENT AirSectorInfo (#PCDATA)>
+<!ELEMENT AircraftType (#PCDATA)>
+<!ELEMENT Allow (#PCDATA)>
+<!ELEMENT AmenityCategory (#PCDATA)>
+<!ELEMENT AmenityCode (#PCDATA)>
+<!ELEMENT AmenityDescription (#PCDATA)>
+<!ELEMENT AmenityLevel (#PCDATA)>
+<!ELEMENT Amount (#PCDATA)>
+<!ELEMENT AmountCode (#PCDATA)>
+<!ELEMENT AmountDue (#PCDATA)>
+<!ELEMENT AmountType (#PCDATA)>
+<!ELEMENT AppliesTo (#PCDATA)>
+<!ELEMENT Arrive_Date (#PCDATA)>
+<!ELEMENT Arrive_Time (#PCDATA)>
+<!ELEMENT Ascending (#PCDATA)>
+<!ELEMENT Availability (#PCDATA)>
+<!ELEMENT Backend (#PCDATA)>
+<!ELEMENT BagCount (#PCDATA)>
+<!ELEMENT BaggageCount (#PCDATA)>
+<!ELEMENT BaggageWeight (#PCDATA)>
+<!ELEMENT BookedUnitType (#PCDATA)>
+<!ELEMENT BookingId (#PCDATA)>
+<!ELEMENT BookingMessageLabel (#PCDATA)>
+<!ELEMENT BookingStatus (#PCDATA)>
+<!ELEMENT BookingType (#PCDATA)>
+<!ELEMENT BookingTypes (#PCDATA)>
+<!ELEMENT BookingUpdateCount (#PCDATA)>
+<!ELEMENT Branch (#PCDATA)>
+<!ELEMENT BranchName (#PCDATA)>
+<!ELEMENT BSP_Value (#PCDATA)>
+<!ELEMENT ButtonName (#PCDATA)>
+<!ELEMENT CabinClass (#PCDATA)>
+<!ELEMENT CanAccept (#PCDATA)>
+<!ELEMENT CanAddServices (#PCDATA)>
+<!ELEMENT CanCancel (#PCDATA)>
+<!ELEMENT CancelDeleteStatus (#PCDATA)>
+<!ELEMENT CancelledServiceLineId (#PCDATA)>
+<!ELEMENT CancelHours (#PCDATA)>
+<!ELEMENT CancelPenaltyServiceLineId (#PCDATA)>
+<!ELEMENT CancelRuleType (#PCDATA)>
+<!ELEMENT CancelRuleUnits (#PCDATA)>
+<!ELEMENT CanDropoff (#PCDATA)>
+<!ELEMENT CanPickup (#PCDATA)>
+<!ELEMENT CanUpdate (#PCDATA)>
+<!ELEMENT CardExpiryMonth (#PCDATA)>
+<!ELEMENT CardExpiryYear (#PCDATA)>
+<!ELEMENT CardHolder (#PCDATA)>
+<!ELEMENT CardNumber (#PCDATA)>
+<!ELEMENT CardSecurityCode (#PCDATA)>
+<!ELEMENT CardType (#PCDATA)>
+<!ELEMENT Carrier (#PCDATA)>
+<!ELEMENT Cash_Paid (#PCDATA)>
+<!ELEMENT ChargeBasis (#PCDATA)>
+<!ELEMENT Child_From (#PCDATA)>
+<!ELEMENT Child_To (#PCDATA)>
+<!ELEMENT Children (#PCDATA)>
+<!ELEMENT ChildrenAllowed (#PCDATA)>
+<!ELEMENT ChildRate (#PCDATA)>
+<!ELEMENT Class (#PCDATA)>
+<!ELEMENT ClassDescription (#PCDATA)>
+<!ELEMENT ClassLabel (#PCDATA)>
+<!ELEMENT Code (#PCDATA)>
+<!ELEMENT CodeTableType (#PCDATA)>
+<!ELEMENT Comment (#PCDATA)>
+<!ELEMENT Comment2 (#PCDATA)>
+<!ELEMENT Commission (#PCDATA)>
+<!ELEMENT Commission_Rate (#PCDATA)>
+<!ELEMENT Commissionable (#PCDATA)>
+<!ELEMENT CommissionPercent (#PCDATA)>
+<!ELEMENT Consult (#PCDATA)>
+<!ELEMENT ContactPhone (#PCDATA)>
+<!ELEMENT ConversionRate (#PCDATA)>
+<!ELEMENT Cost (#PCDATA)>
+<!ELEMENT CostConversionRate (#PCDATA)>
+<!ELEMENT CostCurrency (#PCDATA)>
+<!ELEMENT CostExclusive (#PCDATA)>
+<!ELEMENT CostedInBooking (#PCDATA)>
+<!ELEMENT CostTax (#PCDATA)>
+<!ELEMENT CountChildrenInPaxBreak (#PCDATA)>
+<!ELEMENT CountInfantsInPaxBreak (#PCDATA)>
+<!ELEMENT CountryCode (#PCDATA)>
+<!ELEMENT CountryName (#PCDATA)>
+<!ELEMENT Credit_Paid (#PCDATA)>
+<!ELEMENT CreditLimit (#PCDATA)>
+<!ELEMENT CreditsExclusive (#PCDATA)>
+<!ELEMENT CreditsTax (#PCDATA)>
+<!ELEMENT CreditsTotal (#PCDATA)>
+<!ELEMENT Currency (#PCDATA)>
+<!ELEMENT CurrencySubCode (#PCDATA)>
+<!ELEMENT CurrentBalance (#PCDATA)>
+<!ELEMENT Date (#PCDATA)>
+<!ELEMENT DateFrom (#PCDATA)>
+<!ELEMENT DateOfBirth (#PCDATA)>
+<!ELEMENT DateTo (#PCDATA)>
+<!ELEMENT DayNumber (#PCDATA)>
+<!ELEMENT DBAnalysisCode1 (#PCDATA)>
+<!ELEMENT DBAnalysisCode2 (#PCDATA)>
+<!ELEMENT DBAnalysisCode3 (#PCDATA)>
+<!ELEMENT DBAnalysisCode4 (#PCDATA)>
+<!ELEMENT DBAnalysisCode5 (#PCDATA)>
+<!ELEMENT DBAnalysisCode6 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription1 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription2 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription3 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription4 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription5 (#PCDATA)>
+<!ELEMENT DBAnalysisDescription6 (#PCDATA)>
+<!ELEMENT DeadlineDate (#PCDATA)>
+<!ELEMENT DeadlineDateTime (#PCDATA)>
+<!ELEMENT DeadlineTime (#PCDATA)>
+<!ELEMENT DeleteRefusalReason (#PCDATA)>
+<!ELEMENT Depart_Date (#PCDATA)>
+<!ELEMENT Depart_Time (#PCDATA)>
+<!ELEMENT Department (#PCDATA)>
+<!ELEMENT DepartmentName (#PCDATA)>
+<!ELEMENT DepositDueAmount (#PCDATA)>
+<!ELEMENT DepositDueDate (#PCDATA)>
+<!ELEMENT Description (#PCDATA)>
+<!ELEMENT Description2 (#PCDATA)>
+<!ELEMENT Destination (#PCDATA)>
+<!ELEMENT DestinationCode (#PCDATA)>
+<!ELEMENT DestinationName (#PCDATA)>
+<!ELEMENT DestinationTerminal (#PCDATA)>
+<!ELEMENT DetailDescription (#PCDATA)>
+<!ELEMENT DetailName (#PCDATA)>
+<!ELEMENT Dialogue (#PCDATA)>
+<!ELEMENT DialogueEntry (#PCDATA)>
+<!ELEMENT DisplayOptionsWithZeroRates (#PCDATA)>
+<!ELEMENT Distance (#PCDATA)>
+<!ELEMENT doExternalPointID (#PCDATA)>
+<!ELEMENT doRemark (#PCDATA)>
+<!ELEMENT doTime (#PCDATA)>
+<!ELEMENT Double_Ad_Max (#PCDATA)>
+<!ELEMENT Double_Avail (#PCDATA)>
+<!ELEMENT Double_Max (#PCDATA)>
+<!ELEMENT Double_Max_With_Infants (#PCDATA)>
+<!ELEMENT DoubleCount (#PCDATA)>
+<!ELEMENT DoubleRate (#PCDATA)>
+<!ELEMENT Dropoff_Date (#PCDATA)>
+<!ELEMENT DropoffLabel (#PCDATA)>
+<!ELEMENT DropoffTimeAllowed (#PCDATA)>
+<!ELEMENT DropoffRemarksAllowed (#PCDATA)>
+<!ELEMENT Email (#PCDATA)>
+<!ELEMENT EndLocationCode (#PCDATA)>
+<!ELEMENT EnteredDate (#PCDATA)>
+<!ELEMENT EnteredDateFrom (#PCDATA)>
+<!ELEMENT EnteredDateTo (#PCDATA)>
+<!ELEMENT Error (#PCDATA)>
+<!ELEMENT ErrorData (#PCDATA)>
+<!ELEMENT ErrorNumber (#PCDATA)>
+<!ELEMENT ExRate (#PCDATA)>
+<!ELEMENT External_Ref (#PCDATA)>
+<!ELEMENT ExternalAllRoomTypes (#PCDATA)>
+<!ELEMENT ExternalAvailabilityMode (#PCDATA)>
+<!ELEMENT ExternalDepotID (#PCDATA)>
+<!ELEMENT ExternalGetRateRules (#PCDATA)>
+<!ELEMENT ExternalRate (#PCDATA)>
+<!ELEMENT ExternalRemarks1 (#PCDATA)>
+<!ELEMENT ExternalRemarks2 (#PCDATA)>
+<!ELEMENT ExternalSearch (#PCDATA)>
+<!ELEMENT ExternalSearchMode (#PCDATA)>
+<!ELEMENT ExtGuarantee (#PCDATA)>
+<!ELEMENT ExtOptionDescr (#PCDATA)>
+<!ELEMENT ExtOptionId (#PCDATA)>
+<!ELEMENT ExtPointInfo (#PCDATA)>
+<!ELEMENT ExtPointName (#PCDATA)>
+<!ELEMENT ExtraAdultRate (#PCDATA)>
+<!ELEMENT ExtraChildRate (#PCDATA)>
+<!ELEMENT ExtraQuantity (#PCDATA)>
+<!ELEMENT ExtRatePlanCode (#PCDATA)>
+<!ELEMENT ExtRatePlanDescr (#PCDATA)>
+<!ELEMENT ExtStartTime (#PCDATA)>
+<!ELEMENT ExtSupplierId (#PCDATA)>
+<!ELEMENT Face_Value (#PCDATA)>
+<!ELEMENT Fare_Basis (#PCDATA)>
+<!ELEMENT FareCode (#PCDATA)>
+<!ELEMENT FareName (#PCDATA)>
+<!ELEMENT Fax (#PCDATA)>
+<!ELEMENT FCU (#PCDATA)>
+<!ELEMENT FieldName (#PCDATA)>
+<!ELEMENT FinalPaymentDate (#PCDATA)>
+<!ELEMENT Flight (#PCDATA)>
+<!ELEMENT FlightDuration (#PCDATA)>
+<!ELEMENT Forename (#PCDATA)>
+<!ELEMENT ForenameAlias (#PCDATA)>
+<!ELEMENT FreeOfCharge (#PCDATA)>
+<!ELEMENT FromCurrency (#PCDATA)>
+<!ELEMENT Future1 (#PCDATA)>
+<!ELEMENT Future2 (#PCDATA)>
+<!ELEMENT Future3 (#PCDATA)>
+<!ELEMENT Future4 (#PCDATA)>
+<!ELEMENT FutureBilling (#PCDATA)>
+<!ELEMENT FutureEntered (#PCDATA)>
+<!ELEMENT FV_Surcharge (#PCDATA)>
+<!ELEMENT FYIText (#PCDATA)>
+<!ELEMENT GetForChain (#PCDATA)>
+<!ELEMENT GroupAfterSort (#PCDATA)>
+<!ELEMENT GroupNumber (#PCDATA)>
+<!ELEMENT HasBookingRights (#PCDATA)>
+<!ELEMENT HeaderServiceLineId (#PCDATA)>
+<!ELEMENT IndexFirstOption (#PCDATA)>
+<!ELEMENT Indicator1 (#PCDATA)>
+<!ELEMENT Indicator2 (#PCDATA)>
+<!ELEMENT Indicator3 (#PCDATA)>
+<!ELEMENT InEffect (#PCDATA)>
+<!ELEMENT Infant_From (#PCDATA)>
+<!ELEMENT Infant_To (#PCDATA)>
+<!ELEMENT InfantRate (#PCDATA)>
+<!ELEMENT Infants (#PCDATA)>
+<!ELEMENT InfantsAllowed (#PCDATA)>
+<!ELEMENT Info (#PCDATA)>
+<!ELEMENT InvoicedExclusive (#PCDATA)>
+<!ELEMENT InvoicedTax (#PCDATA)>
+<!ELEMENT InvoicedTotal (#PCDATA)>
+<!ELEMENT InvoiceText1 (#PCDATA)>
+<!ELEMENT InvoiceText2 (#PCDATA)>
+<!ELEMENT InvoiceText3 (#PCDATA)>
+<!ELEMENT InvoiceText4 (#PCDATA)>
+<!ELEMENT IsClosed (#PCDATA)>
+<!ELEMENT IsCompulsory (#PCDATA)>
+<!ELEMENT IsInternetBooking (#PCDATA)>
+<!ELEMENT IsMultiplier (#PCDATA)>
+<!ELEMENT IsOptional (#PCDATA)>
+<!ELEMENT IsPricePerPerson (#PCDATA)>
+<!ELEMENT IsStandardPackageLine (#PCDATA)>
+<!ELEMENT IsSubLogin (#PCDATA)>
+<!ELEMENT Issue_Due (#PCDATA)>
+<!ELEMENT IsValid (#PCDATA)>
+<!ELEMENT IsAgentDialogueEnabled (#PCDATA)>
+<!ELEMENT ItemDescription (#PCDATA)>
+<!ELEMENT Language (#PCDATA)>
+<!ELEMENT LastBookableDate (#PCDATA)>
+<!ELEMENT LastReceiptAmount (#PCDATA)>
+<!ELEMENT LastReceiptDate (#PCDATA)>
+<!ELEMENT LastUpdate (#PCDATA)>
+<!ELEMENT LastUpdateFrom (#PCDATA)>
+<!ELEMENT LastUpdateTo (#PCDATA)>
+<!ELEMENT LinePrice (#PCDATA)>
+<!ELEMENT LinkedServiceLineId (#PCDATA)>
+<!ELEMENT Locality (#PCDATA)>
+<!ELEMENT LocalityDescription (#PCDATA)>
+<!ELEMENT LocalityLabel (#PCDATA)>
+<!ELEMENT LocationCode (#PCDATA)>
+<!ELEMENT MakePaymentInvoiceMode (#PCDATA)>
+<!ELEMENT MaxBooked (#PCDATA)>
+<!ELEMENT MaxSCU (#PCDATA)>
+<!ELEMENT MaximumOptions (#PCDATA)>
+<!ELEMENT Message (#PCDATA)>
+<!ELEMENT MessageCode (#PCDATA)>
+<!ELEMENT MessageFormatType (#PCDATA)>
+<!ELEMENT MessageLabel (#PCDATA)>
+<!ELEMENT MinimumAvailability (#PCDATA)>
+<!ELEMENT MinBooked (#PCDATA)>
+<!ELEMENT MinSCU (#PCDATA)>
+<!ELEMENT MinutesPrior (#PCDATA)>
+<!ELEMENT MobilePhone (#PCDATA)>
+<!ELEMENT MoreInformationURL (#PCDATA)>
+<!ELEMENT MPFCU (#PCDATA)>
+<!ELEMENT Name (#PCDATA)>
+<!ELEMENT NameAlias (#PCDATA)>
+<!ELEMENT NameContains (#PCDATA)>
+<!ELEMENT Not_After (#PCDATA)>
+<!ELEMENT Not_Before (#PCDATA)>
+<!ELEMENT NoteCategory (#PCDATA)>
+<!ELEMENT NoteFormat (#PCDATA)>
+<!ELEMENT NotesInRtf (#PCDATA)>
+<!ELEMENT NoteText (#PCDATA)>
+<!ELEMENT OffsetUnitMultiplier (#PCDATA)>
+<!ELEMENT OffsetTimeUnit (#PCDATA)>
+<!ELEMENT OnRequest (#PCDATA)>
+<!ELEMENT Opt (#PCDATA)>
+<!ELEMENT OptionDescription (#PCDATA)>
+<!ELEMENT OptEnquiryNotes (#PCDATA)>
+<!ELEMENT OptAvail (#PCDATA)>
+<!ELEMENT OptionNumber (#PCDATA)>
+<!ELEMENT OptionRate (#PCDATA)>
+<!ELEMENT Origin (#PCDATA)>
+<!ELEMENT OriginTerminal (#PCDATA)>
+<!ELEMENT OtherCount (#PCDATA)>
+<!ELEMENT OutputFormat (#PCDATA)>
+<!ELEMENT Overdue1 (#PCDATA)>
+<!ELEMENT Overdue2 (#PCDATA)>
+<!ELEMENT Overdue3 (#PCDATA)>
+<!ELEMENT Overdue4 (#PCDATA)>
+<!ELEMENT Override (#PCDATA)>
+<!ELEMENT Override_Rate (#PCDATA)>
+<!ELEMENT PackageLineId (#PCDATA)>
+<!ELEMENT ParentServiceLineId (#PCDATA)>
+<!ELEMENT Password (#PCDATA)>
+<!ELEMENT Pax1 (#PCDATA)>
+<!ELEMENT Pax2 (#PCDATA)>
+<!ELEMENT PaxBreak (#PCDATA)>
+<!ELEMENT PaxBreakChildRates (#PCDATA)>
+<!ELEMENT PaxText1 (#PCDATA)>
+<!ELEMENT PaxText2 (#PCDATA)>
+<!ELEMENT PaxText3 (#PCDATA)>
+<!ELEMENT PaxText4 (#PCDATA)>
+<!ELEMENT PaxText5 (#PCDATA)>
+<!ELEMENT PaxText6 (#PCDATA)>
+<!ELEMENT PaxText7 (#PCDATA)>
+<!ELEMENT PaxText8 (#PCDATA)>
+<!ELEMENT PaxText9 (#PCDATA)>
+<!ELEMENT PaxText10 (#PCDATA)>
+<!ELEMENT PaxType (#PCDATA)>
+<!ELEMENT Pax_Ad_Max (#PCDATA)>
+<!ELEMENT Pax_Ad_Min (#PCDATA)>
+<!ELEMENT Pax_Max (#PCDATA)>
+<!ELEMENT Pax_Max_With_Infants (#PCDATA)>
+<!ELEMENT Pax_Min (#PCDATA)>
+<!ELEMENT Pax_Min_With_Infants (#PCDATA)>
+<!ELEMENT Pay (#PCDATA)>
+<!ELEMENT PenaltyDescription (#PCDATA)>
+<!ELEMENT PersonId (#PCDATA)>
+<!ELEMENT Phone (#PCDATA)>
+<!ELEMENT Pickup_Date (#PCDATA)>
+<!ELEMENT PNR_Ref (#PCDATA)>
+<!ELEMENT Prefer (#PCDATA)>
+<!ELEMENT PriceCode (#PCDATA)>
+<!ELEMENT PriceCodes (#PCDATA)>
+<!ELEMENT PickupLabel (#PCDATA)>
+<!ELEMENT PickupTimeAllowed (#PCDATA)>
+<!ELEMENT PickupRemarksAllowed (#PCDATA)>
+<!ELEMENT Point_ID (#PCDATA)>
+<!ELEMENT PointDescription (#PCDATA)>
+<!ELEMENT PostCode (#PCDATA)>
+<!ELEMENT PriceSelectionMethod (#PCDATA)>
+<!ELEMENT PromptForPuDo (#PCDATA)>
+<!ELEMENT puExternalPointID (#PCDATA)>
+<!ELEMENT puRemark (#PCDATA)>
+<!ELEMENT puTime (#PCDATA)>
+<!ELEMENT QB (#PCDATA)>
+<!ELEMENT Quad_Ad_Max (#PCDATA)>
+<!ELEMENT Quad_Avail (#PCDATA)>
+<!ELEMENT Quad_Max (#PCDATA)>
+<!ELEMENT Quad_Max_With_Infants (#PCDATA)>
+<!ELEMENT QuadCount (#PCDATA)>
+<!ELEMENT QuadRate (#PCDATA)>
+<!ELEMENT Quantity (#PCDATA)>
+<!ELEMENT QuoteMessageLabel (#PCDATA)>
+<!ELEMENT QuotesEnabled (#PCDATA)>
+<!ELEMENT PaxSequence (#PCDATA)>
+<!ELEMENT Periods (#PCDATA)>
+<!ELEMENT Plate (#PCDATA)>
+<!ELEMENT PlatingCarrier (#PCDATA)>
+<!ELEMENT RateAmount (#PCDATA)>
+<!ELEMENT RateConvert (#PCDATA)>
+<!ELEMENT RateId (#PCDATA)>
+<!ELEMENT RateName (#PCDATA)>
+<!ELEMENT RateName2 (#PCDATA)>
+<!ELEMENT RatePerScu (#PCDATA)>
+<!ELEMENT RateText (#PCDATA)>
+<!ELEMENT RateText2 (#PCDATA)>
+<!ELEMENT ReadOnly (#PCDATA)>
+<!ELEMENT ReceiptAmountBookingCurrency (#PCDATA)>
+<!ELEMENT ReceiptReference (#PCDATA)>
+<!ELEMENT ReceiptType (#PCDATA)>
+<!ELEMENT ReceivedExclusive (#PCDATA)>
+<!ELEMENT ReceivedTax (#PCDATA)>
+<!ELEMENT ReceivedTotal (#PCDATA)>
+<!ELEMENT Ref (#PCDATA)>
+<!ELEMENT RelatedRef (#PCDATA)>
+<!ELEMENT Remarks (#PCDATA)>
+<!ELEMENT RemarksAllowed (#PCDATA)>
+<!ELEMENT RemarksLabel (#PCDATA)>
+<!ELEMENT RepeatTimes (#PCDATA)>
+<!ELEMENT Retail (#PCDATA)>
+<!ELEMENT RetailExclusive (#PCDATA)>
+<!ELEMENT RetailTax (#PCDATA)>
+<!ELEMENT ReturnAccountInfo (#PCDATA)>
+<!ELEMENT ReturnAllSubCodes (#PCDATA)>
+<!ELEMENT ReturnBooking (#PCDATA)>
+<!ELEMENT ReturnLastReceipt (#PCDATA)>
+<!ELEMENT ReturnPackageServices (#PCDATA)>
+<!ELEMENT ReturnRoomConfigs (#PCDATA)>
+<!ELEMENT RoomBased (#PCDATA)>
+<!ELEMENT RoomType (#PCDATA)>
+<!ELEMENT RuleAppliesTo (#PCDATA)>
+<!ELEMENT RuleBody (#PCDATA)>
+<!ELEMENT RuleCategory (#PCDATA)>
+<!ELEMENT RuleType (#PCDATA)>
+<!ELEMENT SaleFrom (#PCDATA)>
+<!ELEMENT SalesAnalysis1 (#PCDATA)>
+<!ELEMENT SalesAnalysis2 (#PCDATA)>
+<!ELEMENT SalesAnalysis3 (#PCDATA)>
+<!ELEMENT SalesAnalysis4 (#PCDATA)>
+<!ELEMENT SalesAnalysis5 (#PCDATA)>
+<!ELEMENT SalesAnalysis6 (#PCDATA)>
+<!ELEMENT SaleTo (#PCDATA)>
+<!ELEMENT SCU (#PCDATA)>
+<!ELEMENT ScuCheckOverlapOnly (#PCDATA)>
+<!ELEMENT ScuPrompt (#PCDATA)>
+<!ELEMENT ScuFocQty (#PCDATA)>
+<!ELEMENT SCUqty (#PCDATA)>
+<!ELEMENT SectorSequence (#PCDATA)>
+<!ELEMENT SellBeforeTravel (#PCDATA)>
+<!ELEMENT SellBeforeType (#PCDATA)>
+<!ELEMENT SellCurrency (#PCDATA)>
+<!ELEMENT SellExclusive (#PCDATA)>
+<!ELEMENT SellPrice (#PCDATA)>
+<!ELEMENT SellTax (#PCDATA)>
+<!ELEMENT SendMethod (#PCDATA)>
+<!ELEMENT SendSupplierMessage (#PCDATA)>
+<!ELEMENT SendToAddress (#PCDATA)>
+<!ELEMENT SendToContactType (#PCDATA)>
+<!ELEMENT SequenceNumber (#PCDATA)>
+<!ELEMENT ServiceCategory (#PCDATA)>
+<!ELEMENT ServiceCode (#PCDATA)>
+<!ELEMENT ServiceLineExpiryDate (#PCDATA)>
+<!ELEMENT ServiceLineId (#PCDATA)>
+<!ELEMENT ServiceLineUpdateCount (#PCDATA)>
+<!ELEMENT Single_Ad_Max (#PCDATA)>
+<!ELEMENT Single_Avail (#PCDATA)>
+<!ELEMENT Single_Max (#PCDATA)>
+<!ELEMENT Single_Max_With_Infants (#PCDATA)>
+<!ELEMENT SingleCount (#PCDATA)>
+<!ELEMENT SingleRate (#PCDATA)>
+<!ELEMENT Status (#PCDATA)>
+<!ELEMENT Stop_Indicator (#PCDATA)>
+<!ELEMENT Subject (#PCDATA)>
+<!ELEMENT SubServiceLineId (#PCDATA)>
+<!ELEMENT Surname (#PCDATA)>
+<!ELEMENT SurnameAlias (#PCDATA)>
+<!ELEMENT SupplierAnalysis1 (#PCDATA)>
+<!ELEMENT SupplierAnalysis2 (#PCDATA)>
+<!ELEMENT SupplierAnalysis3 (#PCDATA)>
+<!ELEMENT SupplierAnalysis4 (#PCDATA)>
+<!ELEMENT SupplierAnalysis5 (#PCDATA)>
+<!ELEMENT SupplierAnalysis6 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription1 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription2 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription3 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription4 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription5 (#PCDATA)>
+<!ELEMENT SupplierAnalysisDescription6 (#PCDATA)>
+<!ELEMENT SupplierCode (#PCDATA)>
+<!ELEMENT SupplierConfirmation (#PCDATA)>
+<!ELEMENT SupplierId (#PCDATA)>
+<!ELEMENT SupplierLogin (#PCDATA)>
+<!ELEMENT SupplierMessageError (#PCDATA)>
+<!ELEMENT SupplierName (#PCDATA)>
+<!ELEMENT Stay (#PCDATA)>
+<!ELEMENT StayPayType (#PCDATA)>
+<!ELEMENT SType (#PCDATA)>
+<!ELEMENT Tax_Actual (#PCDATA)>
+<!ELEMENT Tax_Detail (#PCDATA)>
+<!ELEMENT Tax_Estimate (#PCDATA)>
+<!ELEMENT TaxIndicator (#PCDATA)>
+<!ELEMENT Ticket_Class (#PCDATA)>
+<!ELEMENT Ticket_Number (#PCDATA)>
+<!ELEMENT Ticket_Sector_Status (#PCDATA)>
+<!ELEMENT Ticket_Sequence (#PCDATA)>
+<!ELEMENT Ticket_Status (#PCDATA)>
+<!ELEMENT Ticket_Type (#PCDATA)>
+<!ELEMENT Ticketer (#PCDATA)>
+<!ELEMENT TicketId (#PCDATA)>
+<!ELEMENT Title (#PCDATA)>
+<!ELEMENT TitleAlias (#PCDATA)>
+<!ELEMENT ToCurrency (#PCDATA)>
+<!ELEMENT Token (#PCDATA)>
+<!ELEMENT Total_Commission (#PCDATA)>
+<!ELEMENT Total_Distance (#PCDATA)>
+<!ELEMENT Total_Override (#PCDATA)>
+<!ELEMENT TotalAgentAmount (#PCDATA)>
+<!ELEMENT TotalAgentTax (#PCDATA)>
+<!ELEMENT TotalAmount (#PCDATA)>
+<!ELEMENT TotalPrice (#PCDATA)>
+<!ELEMENT TotalRateAmount (#PCDATA)>
+<!ELEMENT TotalRateTax (#PCDATA)>
+<!ELEMENT TotalTax (#PCDATA)>
+<!ELEMENT Tour_Code (#PCDATA)>
+<!ELEMENT TourplanBookingStatus (#PCDATA)>
+<!ELEMENT TourplanConsultant (#PCDATA)>
+<!ELEMENT TourplanConsultantEmail (#PCDATA)>
+<!ELEMENT TourplanConsultantName (#PCDATA)>
+<!ELEMENT TourplanOldBookingStatus (#PCDATA)>
+<!ELEMENT TourplanServiceStatus (#PCDATA)>
+<!ELEMENT TourplanUser (#PCDATA)>
+<!ELEMENT TransactionId (#PCDATA)>
+<!ELEMENT TransactionRef (#PCDATA)>
+<!ELEMENT TransactionType (#PCDATA)>
+<!ELEMENT TranslationMethod (#PCDATA)>
+<!ELEMENT TranslationLanguage (#PCDATA)>
+<!ELEMENT TravelDate (#PCDATA)>
+<!ELEMENT TravelDateFrom (#PCDATA)>
+<!ELEMENT TravelDateTo (#PCDATA)>
+<!ELEMENT Triple_Ad_Max (#PCDATA)>
+<!ELEMENT Triple_Avail (#PCDATA)>
+<!ELEMENT Triple_Max (#PCDATA)>
+<!ELEMENT Triple_Max_With_Infants (#PCDATA)>
+<!ELEMENT TripleCount (#PCDATA)>
+<!ELEMENT TripleRate (#PCDATA)>
+<!ELEMENT Twin_Ad_Max (#PCDATA)>
+<!ELEMENT Twin_Avail (#PCDATA)>
+<!ELEMENT Twin_Max (#PCDATA)>
+<!ELEMENT Twin_Max_With_Infants (#PCDATA)>
+<!ELEMENT TwinCount (#PCDATA)>
+<!ELEMENT TwinRate (#PCDATA)>
+<!ELEMENT Type (#PCDATA)>
+<!ELEMENT UDText1 (#PCDATA)>
+<!ELEMENT UDText2 (#PCDATA)>
+<!ELEMENT UDText3 (#PCDATA)>
+<!ELEMENT UDText4 (#PCDATA)>
+<!ELEMENT UDText5 (#PCDATA)>
+<!ELEMENT UDText6 (#PCDATA)>
+<!ELEMENT UDText7 (#PCDATA)>
+<!ELEMENT UDText8 (#PCDATA)>
+<!ELEMENT UDText9 (#PCDATA)>
+<!ELEMENT UDText10 (#PCDATA)>
+<!ELEMENT UDText11 (#PCDATA)>
+<!ELEMENT UDText12 (#PCDATA)>
+<!ELEMENT UDText13 (#PCDATA)>
+<!ELEMENT UDText14 (#PCDATA)>
+<!ELEMENT UDText15 (#PCDATA)>
+<!ELEMENT UDText16 (#PCDATA)>
+<!ELEMENT UDText17 (#PCDATA)>
+<!ELEMENT UDText18 (#PCDATA)>
+<!ELEMENT UDText19 (#PCDATA)>
+<!ELEMENT UDText20 (#PCDATA)>
+<!ELEMENT UnitType (#PCDATA)>
+<!ELEMENT UpdateFailureCode (#PCDATA)>
+<!ELEMENT UpdateFailurereason (#PCDATA)>
+<!ELEMENT Version (#PCDATA)>
+<!ELEMENT Voucher_Status (#PCDATA)>
+<!ELEMENT VoucherName (#PCDATA)>
+<!ELEMENT VText1 (#PCDATA)>
+<!ELEMENT VText2 (#PCDATA)>
+<!ELEMENT VText3 (#PCDATA)>
+<!ELEMENT VText4 (#PCDATA)>
+<!ELEMENT VText5 (#PCDATA)>
+<!ELEMENT VText6 (#PCDATA)>
+<!ELEMENT VText7 (#PCDATA)>
+<!ELEMENT VText8 (#PCDATA)>
+<!ELEMENT VText9 (#PCDATA)>
+<!ELEMENT VText10 (#PCDATA)>
+<!ELEMENT VText11 (#PCDATA)>
+<!ELEMENT VText12 (#PCDATA)>
+<!ELEMENT VText13 (#PCDATA)>
+<!ELEMENT VText14 (#PCDATA)>
+<!ELEMENT VText15 (#PCDATA)>
+<!ELEMENT VText16 (#PCDATA)>
+<!ELEMENT VText17 (#PCDATA)>
+<!ELEMENT VText18 (#PCDATA)>
+<!ELEMENT VText19 (#PCDATA)>
+<!ELEMENT VText20 (#PCDATA)>
+<!ELEMENT Warning (#PCDATA)>
+<!ELEMENT Web (#PCDATA)>

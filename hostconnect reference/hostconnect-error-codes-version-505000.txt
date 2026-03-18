@@ -1,0 +1,54 @@
+Standard iCom Error Codes
+Date: 2023-03-27
+
+Error codes returned in by a number of iCom components, including hostConnect, consist of a four digit error number (in the range 1000 to 9999), a space, a three character string that identifies the component that generated the error message, a space, and a free-form string containing further information about the error. Some iCom components that can feature in error messages are hostConnect (SCN), productConnect (DBI), the data servlet (DSV), the iCom booking engine (BKE).
+
+The list of component codes and error codes actually used in a particular iCom version is version-specific.
+
+The following table summarises the error numbers used, and what they mean.
+
+Number	Description
+1000	A "general" error has occurred. Most general errors occur when there is a problem within iCom.
+1001	Missing input. For example, a required input data item is not provided.
+1002	Illegal input. For example, an illegal date value (such as 2001-xx-97) has been supplied.
+1003	Communications error. A data communications link within iCom failed.
+1004	Timeout. A timeout occurred while an iCom component was waiting for something to happen.
+1005	Database error. A database access error occurred within an iCom component.
+1006	File access error. An error occurred when an iCom component attempted a file access of some sort.
+1007	Data servlet cache not loaded. The iCom data servlet must load a valid cache before it can accept requests.
+1008	Engine error. An error was reported by the iCom booking engine.
+1009	The booking engine is currently off-line.
+1040	No merchant account.
+1050	Booking not found.
+1051	Agent not found (or wrong password given).
+1052	Option not found.
+1053	Service line not found.
+1054	Operation is illegal on a read-only booking.
+1055	Operation is illegal for an agent over their credit limit.
+1056	Operation is illegal for this service line.
+1057	Permission denied for this operation.
+1058	The item the request is trying to create already exists.
+1059	Supplier not found.
+1060	Database record not found.
+1061	Supplier exists.
+1062	Option exists.
+1063	Agent exists, but has no default currency.
+1064	Operation is illegal on a non-iCom booking.
+1065	Login failed; two or more agents have this login.
+1066	The operation could not be completed due to an issue with the configuration settings. Often a configuration setting required for that operation has not been set.
+1067	No availabity was found while doing a hostConnect AcceptService operation.
+1068	Agent with given code was not found
+1069	Agent with given code already exists
+2000	Credit card expired.
+2001	Credit card number invalid (is non-numeric, or fails validation check).
+2002	Card wrong type (card type does not match the specified card type).
+2006	Operation requested is not valid for a confirmed booking.
+2007	Operation requested is not valid for a quote.
+2008	Error accessing external card payment system.
+2009	Transaction refused by external card payment system.
+2010	There are no service lines in this booking that can be cancelled. There are various reasons for this. There may be no service lines in the booking. Or, all service lines in the booking are already cancelled. Or, the booking contains one or more non-cancelled service lines, but none of them can be cancelled as in each case the service date is too close.
+2011	Attempt to add a service violates a MinSCU requirement at the option rate level.
+2050	hostConnect refused the request, because no valid hostConnect or webConnect entry was found that permitted the specfied request by the specified agent from the source IP address of the request.
+2051	hostConnect refused the request, because the maximum number of running requests has been exceeded.
+5000	The specified BookingUpdateCount is no longer valid; request rejected.
+5001	The specified ServiceLineUpdateCount is no longer valid; request rejected.

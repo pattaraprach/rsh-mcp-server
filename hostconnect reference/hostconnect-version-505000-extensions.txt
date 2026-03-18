@@ -1,0 +1,551 @@
+hostConnect Extensions
+hostConnect Version: 5.05.000
+Date: 2023-03-08
+
+Table of Contents
+In this article:
+Table of Contents
+1 Overview
+1.1 Changes In This Version
+1.2 Changes that are not backwards compatible
+2 Extensions of Standard Requests
+2.1 New fields for all requests
+2.2 AddService
+New fields (fixed services)
+2.3 GetBooking
+2.4 GetBookingMessage
+2.5 OptionInfo
+2.6 AgentInfo
+2.7 UpdateBooking
+2.8 CancelServices
+2.9 SupplierInfo
+2.10 DeleteService
+2.11 QuoteToBook
+3 New Requests
+3.1 UpdateService
+3.2 GetCurrencyConversions
+3.3 GetBookingPaymentSummary
+3.4 RecordBookingPayment
+3.5 GetSendSupplierMessage
+3.6 GetAccountingMessage
+3.7 ExternalAirInfo
+3.8 SetServicePrice
+3.9 Admin
+4 Accessing package service lines
+1 Overview
+The standard hostConnect interface was designed for third parties to use to interface with Tourplan. Over time, a series of extensions have been made to offer greater functionality to Tourplan users who have developed in-house systems to communicate with hostConnect. This document details these extensions, which take the form of a number of new fields for standard hostConnect requests, and some new requests.
+
+A significant extension is the ability to add fixed services to a booking. Ordinary service lines are the normal Tourplan service lines that are costed by Tourplan. All service lines added through Fastbook and the standard version of the hostConnect interface are ordinary service lines. A fixed service is priced external to Tourplan and added through hostConnect. Details of the pricing (plus some additional analysis fields needed in Tourplan) are included in the AddService request that adds the fixed service to the booking.
+
+Tourplan knows comparatively little about the details of a fixed service. For example, it has no information on how the costs are broken down into components, such as the per room charges, charges for extra like breakfasts and so on.
+
+1.1 Changes In This Version
+Significant changes between this version and version 4.x:
+
+New request SetServicePrice.
+New request Admin.
+New field NameAlias can be changed by UpdateBooking.
+Field Language has been added to the GetSendSupplierMessageRequest and GetAccountingMessageRequest requests.
+Additional fields for a number of field groups: InvoiceText3 and InvoiceText4, VText11 to VText20, and (for agent data) UDText11 to UDText20.
+The number of PaxText fields has increased from 5 to 10.
+New field SendSupplierMessage for requests DeleteService, CancelServices and QuoteToBook.
+New element PaymentDetails for requests GetBooking, AddService and UpdateBooking.
+New field ExternalAvailabilityMode for OptionInfo request.
+New fields puExternalPointID and doExternalPointID for UpdateService request.
+New fields ReceiptAmountBookingCurrency, MakePaymentInvoiceMode and ServiceLineIds for RecordBookingPayment request.
+1.2 Changes that are not backwards compatible
+From 4.04.000, room configuration is now properly supported for fixed services. This means that if a fixed service was added with multiple rooms, then multiple rooms will be returned by GetBooking. Also, RoomType is now returned for supplier fixed services. If it was not supplied in the room configuration sent to iCom then a room type of SG is returned.
+
+From 2.75.000, the InvoiceText1, InvoiceText2, and MessageFormatType fields are no longer under the Pricing element. They are now in AddServiceRequest, UpdateServiceRequest and Service.
+
+2 Extensions of Standard Requests
+2.1 New fields for all requests
+This group of data items can be supplied for all request types. Note that for each data item it may not be relevant for certain request types.
+
+Data item	Type	Description
+ForceStdBookOpRights	Boolean	This attribute of the Request element was added to say that even though extensions are enabled, the standard booking operation rights should still be applied. This means that bookings whose travel dates have past are read-only, and that the standard checks are done to see whether services can be cancelled/deleted or accepted. All other extensions described in this document are available. Optional (defaults to N).
+TourplanUser	String (30)	For requests that update bookings, TourplanUser is recorded as the person who made the change. TourplanUser does not have to be one of the Tourplan users setup within Tourplan. Optional (defaults to the Tourplan user the internet booking engine runs as).
+BookingUpdateCount
+ServiceLineUpdateCount	Integer	Every booking has a BookingUpdateCount and every service line in the booking has a ServiceUpdateCount. These values are updated when the booking header is updated (for BookingUpdateCount) and when a service line is updated (for ServiceLineUpdateCount). The update counts for a booking and its service lines are returned by the GetBooking request. To be sure that a booking has not changed between getting it out of hostConnect and updating it, one or both of these values can be supplied with any type of update request, in which case the supplied values are compared with values in the database, and if there is a mismatch the request is aborted and an error is returned.
+2.2 AddService
+The hostConnect extensions provide two new modes for booking services: fixed services (where pricing is supplied in the AddService request) and direct booking of a service line in an external supplier system. These new modes are mutually exclusive (a service cannot be both fixed and booked in an external supplier system). Also, there are additional fields that can be specified for all types of service line. The additional capabilities for AddService  are covered under the headings:
+
+Changes to the rules relating to standard AddService fields.
+New fields that can be supplied for any service (ordinary or fixed).
+New fields that can be supplied for services booked in an external supplier system.
+New fields that can only be supplied for fixed services.
+Changes for existing fields
+Data item	Nature of change
+DateFrom	In the extended hostConnect interface DateFrom is allowed to be in the past.
+New general fields (ordinary and fixed services)
+A number of new fields can be supplied for ordinary and fixed services. Those that apply at the booking level are listed in the table below. Note that either the UDText fields or Email can be specified (but not both). This is because the Email value is actually stored in one of the UDText fields (the field used is specified in the Internet settings in Tourplan).
+
+Three of these fields (FinalPaymentDate, DepositDueDate and DepositDueAmount) appear under the PaymentDetails element. The following use cases are supported:
+
+PaymentDetails not present. No changes made to booking payment details.
+
+PaymentDetails is present and empty. Payment details are removed.
+
+PaymentDetails contains FinalPaymentDate only. FinalPaymentDate is updated and deposit details are removed.
+
+PaymentDetails contains all three fields. FinalPaymentDate and deposit details are updated.
+
+Data item	Type	Description
+TourplanBookingStatus	String (2)	Tourplan booking status (can only be supplied in the AddService request that creates a booking). Note, must be a valid Tourplan booking status. Optional.
+UDText1 to
+UDText5	String (60)	User defined text fields. Optional.
+TourplanConsultant	String (6)	Tourplan consultant code. Note, must be a valid Tourplan consultant code. Optional.
+TaxIndicator	Integer (0 to 8)	Tax indicator. Optional (if not specified the agent tax indicator is used).
+FinalPaymentDate	Date	Date final payment is due.
+DepositDueDate	Date	Date deposit is due. Cannot be after booking travel date, or after final payment date.
+DepositDueAmount	Integer	Booking deposit amount, in cents, in booking currency. Cannot be negative. Can only be zero if FinalPaymentDate and DepositDueDate are the same. Cannot exceed the retail total of the booking.
+A number of additional fields can be supplied at the service line level.
+
+Data item	Type	Description
+NoteCategory
+NoteText	String (3)
+String (60000)	Zero or more service line notes can be included in the AddService request. NoteCategory for each must be a valid Tourplan note category that has type BS and that does not allow multiple notes. The contents of NoteText can be plain text or HTML. If the format is different to that of the Tourplan note category, a conversion is done. If HTML is converted to plain text, then all formatting is lost. Optional.
+PaxText1 to
+PaxText10	String (60)	Additional per pax text fields. Optional.
+SupplierConfirmation	String (30)	Supplier confirmation code. Optional.
+PriceCode	String (2)	Price code to book the service line under. Does not have to be a price code the agent login is associated with. PriceCode can be made available in standard mode by setting the hostConnect setting priceCodeInStandardMode to Y (in that case only agent price codes can be used). Optional.
+SendSupplierMessage	Boolean	Helps to determine if there is an attempt to send supplier messages. If the ICOM_SEND_MESSAGE ini is set to A then an attempt to send messages is made unless a value of N is supplied for this field (if Y is supplied or this field is omitted then an attempt to send messages is made). If the ICOM_SEND_MESSAGE ini is set to Y then sending messages is not attempted unless a value of Y is supplied for this field (if N is supplied or this field is omitted then there is no attempt to send messages). If the ICOM_SEND_MESSAGE ini is set to N then sending messages is not attempted, no matter what is supplied for this field. If extensions are not enabled or this field is omitted, there is an attempt to send messages if the ICOM_SEND_MESSAGE ini is set to A, and no attempt is made if it is Y or N. Optional.
+InvoiceText1 to
+InvoiceText4	String (60)	Lines of invoice text. Optional (can only be supplied for fixed services or external supplier services).
+MessageFormatType	String (2)	Tourplan message format for the service line. Must be a valid Tourplan message type. Optional (can only be supplied for fixed services or external supplier services).
+New fields (external supplier services)
+A number of fields can (optionally) be supplied when an external supplier service is booked. The various credit card fields occur under the element CreditCardDetails (if that element is not supplied and credit card details are needed, then credit card details configured into Tourplan will be used). There is also a special class of external supplier services for Air Services. These are identified by the presence of an ExternalAirRouting element which contains FlightSector and Token elements. A number of fields cannot be supplied: OnRequest, PriceCode, fixed service fields.
+
+Data item	Type	Description
+ExternalRemarks1,ExternalRemarks2	String	Optional fields that can be specified if RateId is for an external rate. These fields are relayed to the external system. The maximum length of each is dependent on the external system.
+CardHolder	String	Name of credit card holder. Must be supplied if a CreditCardDetails element is present.
+CardNumber	String	Credit card number (digits only; should contain no other characters such as spaces and dashes). Must be supplied if a CreditCardDetails element is present.
+CardType	String (2)	Type credit card holder. Supply the standard two character card type: VI (Visa), MC (Mastercard), AX (American Express), DC (Diners Club), etc. Must be supplied if a CreditCardDetails element is present.
+CardExpiryYear	Integer	Year the card expires in. Must be supplied if a CreditCardDetails element is present.
+CardExpiryMonth	Integer (1..12)	Month the card expires in. Must be supplied if a CreditCardDetails element is present.
+CardSecurityCode	String	Card security code (sometimes called the card verification number). Optional.
+ExternalAirRoutings	XML element	Used to supply information about the external air product to book. This is a list of ExternalAirRouting elements, each of which contain costed data about a routing collected via the ExternalAirInfo request.
+The ExternalAirRoutings element consists of:
+
+Data item	Type	Description
+ExternalAirRouting	XML Element	Element that describes the collection of flights/sectors that could be used to complete the routing requested along with the token used to operate the routing.
+The ExternalAirRouting element consists of:
+
+Data item	Type	Description
+FlightSectors	XML Element	Element that describes the collection of flights/sectors that could be used to complete a routing.
+Token	String	An array of encoded Tokens that the external flight engines require for subsequent operations.
+New fields (fixed services)
+All of these new fields are at the service line level (none are at the booking level). The fields are discussed in two groups. The first group (listed in the following table) are the extra fields that do not hold price information. The second group of fields are those that specify the prices for this service line. Note that a service line is a fixed service if SupplierID or SupplierCode is included in the AddService request.
+
+Data item	Type	Description
+SupplierID or SupplierCode	Integer
+String (6)	The supplier (creditor) that this service is being supplied by.
+TourplanServiceStatus	String (2)	Must be a valid Tourplan service status. Required (for fixed services). Ignored if ServiceCategory is E.
+Pickup_Date	Date	Can be used in the rare situation where the pickup date is different to the service date. Optional (defaults to DateFrom).
+Dropoff_Date	Date	The date the service finishes. Optional (defaults to DateFrom). Can also be supplied for external rental car services (default in that case is dropoff date computed using standard Tourplan logic).
+SequenceNumber	Integer	By default Tourplan assigns the service sequence number, but if SequenceNumber is specified then it is used as the sequence number. Optional.
+LocationCode	String (3)	A valid Tourplan location code. Required for fixed services (for reporting purposes).
+ServiceCode	String (2)	A valid Tourplan service code. Required for fixed services (for reporting purposes).
+DBAnalysisCode1 to
+DBAnalysisCode6	String (2)	Database analysis codes. Each value supplied must be one of the codes setup in Tourplan for that particular analysis code. Optional.
+VText1 to
+VText20	String (60)	Voucher text lines 1 to 20. Optional.
+The remaining group of data items contain pricing information. Up to four prices can be supplied:
+
+Cost (the amount to be paid to the supplier).
+
+Sell (the "normal" selling price).
+
+Agent (the amount to be paid by the agent).
+
+Retail (the price the agent will sell to their customer at).
+
+Cost and agent prices (currency, tax amount, tax exclusive amount) must be supplied. The sell price is unlikely to be supplied (the sell currency is the same as the cost currency). The retail price can be supplied (retail currency is the same as agent currency).
+
+Data item	Type	Description
+ItemDescription	String (60)	A description of the item (such as Two twin rooms). Displayed in the Service Costs screen in Tourplan. Optional.
+CostCurrency	String (3)	The currency that cost and (if present) sell prices are in. Must be a valid currency for the supplier the booking is for. Required.
+CostConversionRate	Decimal (8 d.p.)	The exchange rate Tourplan should use (for this service line) to convert CostCurrency to booking currency (at present booking currency and AgentCurrency must both be the agent's default currency). Whether an amount in CostCurrency is converted to booking currency by multiplying or dividing by CostConversionRate is determined by the Internet ini setting ICOM_EXCHANGERATETYPE. Required.
+CostExclusive	Decimal (2 d.p.)	The cost price, exclusive of tax. Required.
+CostTax	Decimal (2 d.p.)	The amount of tax to be added to the cost price. Required.
+SellExclusive	Decimal (2 d.p.)	The sell price, exclusive of tax. Optional.
+SellTax	Decimal (2 d.p.)	The amount of tax to be added to the sell price. Optional.
+AgentCurrency	String (3)	The currency that agent and (if present) retail prices are in. Must be the booking currency (if this is the first service line in a new booking, then the booking currency is the default agent currency). Required.
+AgentExclusive	Decimal (2 d.p.)	The agent price, exclusive of tax. Required.
+AgentTax	Decimal (2 d.p.)	The amount of tax to be added to the agent price. Required.
+RetailExclusive	Decimal (2 d.p.)	The retail price, exclusive of tax. Optional.
+RetailTax	Decimal (2 d.p.)	The amount of tax to be added to the retail price. Optional.
+ScuFocQty	Integer	The number of second charge units that are free of charge. Optional (defaults to 0).
+New returned fields
+If an attempt is made to send a supplier message, then if an error occurred SupplierMessageError is returned and contains details of the error. Otherwise a MessageDetails element is returned containing details of the message sent (see GetSendSupplierMessage for details of the contents of MessageDetails).
+
+2.3 GetBooking
+NoteFormat is an optional fields that control the format in which booking and service line notes are returned. See the OptionInfo section in the documentation of the standard hostConnect interface for details of the values taken by these fields. Notes are subject to any requested language translation.
+
+Another boolean input field is ReturnPackageServices (optional, defaults to N). If this field is Y then all package service lines are returned, rather than just package service lines that were originally optional. See Section 4 for details on what happens if package service lines are returned.
+
+The GetBooking return information has been expanded. For the most part the changes mirror the additional fields that can be entered through AddService. These are:
+
+At the booking level: TourplanBookingStatus, UDText1 to UDText5, TourplanConsultant, TaxIndicator, SalesAnalysis1 to SalesAnalysis6.
+
+At the service line level, for all services: Pickup_Date, Dropoff_Date, PaxText1 to PaxText10, SupplierConfirmation, PriceCode, TourplanServiceStatus and service line notes (BS notes, and copied-in product notes). Also, if ReturnPackageServices is Y then a number of other fields are returned. ParentServiceLineId is the service line id of the package this service is part of. If this service is part of a package within a package, then ParentServiceLineId is the second level package header (and HeaderServiceLineId is the top level package header). Where a service is an ordinary service within a top level package, ParentServiceLineId and HeaderServiceLineId are the same. The integer PackageLineId is returned for each package service line (it is a link to the line in the package definition). The boolean IsStandardPackageLine is returned for each package service line to indicate whether the service line is a standard part of the package, or an optional extra (which may or may not have been accepted in this booking).
+
+At the service line level, for fixed services and external supplier services: InvoiceText1 to InvoiceText4, and MessageFormatType.
+
+At the service line level, for fixed services: LocationCode, ServiceCode, DBAnalysisCode1 to DBAnalysisCode6, VText1 to VText20 and the fields containing pricing information.
+
+At the booking level, booking header notes are returned (see the UpdateBooking section for details). At the service line level, Voucher_Status is returned for every service line. It is a one character field that has one of the following values: blank (new service line), N (no cost), C (closed), L (liability only), R (reprint required) and P (printed). Also, ServiceCategory is returned for every service line. It is a one character field that has one of the following values: A (air service), C (cancel penalty service line), E (service linked to external supplier system), F (iCom supplier fixed service), G (iCom option fixed service), H (package header service), P (package line service), S (standard service). A package header service is a component of another package HeaderServiceLineId is returned for the package service header.
+
+At the booking level, PaymentDetails are returned if they are recorded against the booking. If only a final payment date has been set, then the PaymentDetails element contains FinalPaymentDate. If deposit details have also been set then two additonal elements are present in the PaymentDetails element: DepositDueAmount and DepositDueDate. If no payment details are recorded, then a PaymentDetails element is not returned.
+
+For fixed services created in hostConnect versions prior to 4.04.000, the room configuration returned just lists the pax in the service line.
+
+2.4 GetBookingMessage
+New input fields
+Data item	Type	Description
+MessageCode	String	Message code for a Tourplan agent message. This field is an an alternative to MessageLabel.
+2.5 OptionInfo
+New input fields
+Data item	Type	Description
+ExternalSearchMode	String	
+hostConnect can return rates held in the Tourplan database, and rates retrieved from external systems. This parameter plays in a major role in determining where hostConnect looks for rates. If it is I then only internal rates are returned. If it is E then only external rates are returned. If it is A then all rates, internal and external, are returned. At present external rates are returned for stay pricing only (Info=S). If RateId is supplied then the value of ExternalSearchMode is ignored, and only external rates are returned.
+
+If ExternalSearchMode is not specified the following happens. If a price selection method is in effect then internal and external rates are searched for; otherwise only internal rates are examined. A price selection method is in effect if PriceSelectionMethod has been specified, or the INI ES_ICOM_PRICE_SELECTION has a non-blank value.
+
+Note that for A and E multiple rates can be returned, each in its own OptStayResults element. At present for I no more that one OptStayResults element is returned.
+
+PriceSelectionMethod	String	
+Only has any effect if rates from external system(s) are available. This setting defines what stay rate (or rates) are returned for an option. If E is supplied than all rates are returned. Otherwise, the best rate (according to some criteria) is returned. If there are one or more rates with confirmed availability then the best of the confirmed availability rates is returned. Otherwise the best on request rate is returned.
+
+There are a number of ways of determining the best rate:
+
+L means lowest selling price.
+A means highest margin amount.
+P means highest margin percentage.
+If PriceSelectionMethod is not specified then the value of ES_ICOM_PRICE_SELECTION is used. If that value is blank or not specified then no best price selection occurs.
+
+RateId	String	A RateId element returned by a previous OptionInfo request can be supplied as an input parameter. It is an error if RateId is specified and the search is for more than one option. It RateId is for an external rate, then the ExternalSearchMode is forced to E, overriding any value supplied, and only rates associated with the specified RateId are returned.
+ExternalGetRateRules	Boolean	This field only applies if RateId is supplied. If ExternalGetRateRules is Y (by default it is N) then the external system is asked for an extra level of rate detail to be returned (some external systems refer to this as asking for rate rules). What additional information (if any) is returned is dependent on the external system rates are coming from.
+PriceCode	String (2)	If specified then all rates returned (for stay prices, stay rates, and date range rates) are from the specified price code (whether or not the agent login used has access to the specified price code). PriceCode can be made available in standard mode by setting the hostConnect setting priceCodeInStandardMode to Y (in that case only agent price codes can be used).
+EndLocationCode	String (3)	This field is used to specify the end location of the service for options which have a start and end location, such as external rental cars where it is possible to pickup the car from one depot and drop off at another. When not supplied the end location is assumed to be the same as the start location for the service.
+ExternalAvailabilityMode	String	
+hostConnect can return availability held in the Tourplan database, and availability retrieved from external systems. This parameter determines where hostConnect looks for availability for the Full Availability request. If it is I then only internal availability is returned. If it is E then only external availability is returned. If it is A then all availability, internal and external, is returned. At present this only affects Full Availability (Date, Avaliability pair) returned for 'External Availability' (Info=E).
+
+If ExternalAvailabilityMode is not specified then the default is I
+
+New output fields
+Data item	Type	Description
+Warning	String	Zero or more warning messages are returned. They report cases problems that occurred during the search. For example, searching for an option failed because some of the option's information on the database is not valid (overlapping rates for the same price code, for example). Or because of an error searching in an external system. These errors do not abort the search and cause a hostConnect error return as if that happened it would prevent OptionInfo from returning a results for options that were searched without error.
+PriceCode	String	Returned as part of the OptDateRange element for date range rates.
+Prefer	Integer	Returned as part of the OptStayResults element. It is the Prefer value for the first day of the stay.
+2.6 AgentInfo
+New output fields
+Data item	Type	Description
+CurrencySubCode	String	Currency sub-code assigned to the agent.
+UDText1 to UDText20	Strings	User defined text fields.
+2.7 UpdateBooking
+Most of the additional input fields for this request work in the same way as the corresponding input fields of the AddService request (see the DTD for the full field list). The input fields that do not fall into this category are detailed in the table below.
+
+Data item	Type	Description
+TourplanOldBookingStatus
+TourplanBookingStatus	String (2)
+String (2)	To change the status of the booking, both of these data items must be supplied (and both must be valid Tourplan booking statuses). When this request is processed, the booking status is changed to TourplanBookingStatus if and only if the booking status is currently TourplanOldBookingStatus. If this is not the case, then the rest of the updates are still done. The current booking status is returned in the reply, and this can be compared with TourplanBookingStatus to see whether the change occurred or not. Optional.
+EnteredDate	Date	By default the entered date of a booking is the day it was created. However, this date can be changed by specifying a new EnteredDate. Optional.
+NoteCategory
+NoteText	String (3)
+String (60000)	Zero or more booking notes can be included in the UpdateBooking request. NoteCategory for each must be a valid Tourplan note category that has type BH and that does not allow multiple notes. The contents of NoteText can be plain text or HTML. If the format is different to that of the Tourplan note category, a conversion is done. If HTML is converted to plain text, then all formatting is lost. Optional.
+The following additional data items are returned.
+
+Data item
+Type	Description
+TourplanBookingStatus	String (2)	The booking status after the completion of the booking update.
+
+
+
+2.8 CancelServices
+As noted above in the AddService section, it is now possible to cause a service to be added to an external supplier system. If CancelServices is attempted on a booking that contains one or more service lines linked to an external supplier system, then the CancelServices request will fail unless all such service lines are already cancelled (via the DeleteService request).
+
+New input fields
+Data item	Type	Description
+SendSupplierMessage	Boolean	Helps to determine if there is an attempt to send supplier messages. If the ICOM_SEND_CANCEL_MESSAGE ini is set to A then an attempt to send messages is made unless a value of N is supplied for this field (if Y is supplied or this field is omitted then an attempt to send messages is made). If the ICOM_SEND_CANCEL_MESSAGE ini is set to Y then sending messages is not attempted unless a value of Y is supplied for this field (if N is supplied or this field is omitted then there is no attempt to send messages). If the ICOM_SEND_CANCEL_MESSAGE ini is set to N then sending messages is not attempted, no matter what is supplied for this field. If extensions are not enabled or this field is omitted, there is an attempt to send messages if the ICOM_SEND_CANCEL_MESSAGE ini is set to A, and no attempt is made if it is Y or N. Optional.
+2.9 SupplierInfo
+This request has been updated such that it is now possible to get information via agent or supplier login. When AgentID is used the request operates as it has always done. When SupplierLogin is used to login the request will only return data on the login supplier (it is not valid to supply SupplierCode or SupplierID).
+
+Data item	Type	Description
+SupplierLogin	String	The supplier login name.
+2.10 DeleteService
+New field SendSupplierMessage. Works as per the description of the same field for the CancelServices request.
+
+2.11 QuoteToBook
+New input fields
+Data item	Type	Description
+SendSupplierMessage	Boolean	Helps to determine if there is an attempt to send supplier messages. If the ICOM_SEND_QUOTETOBOOK_MESSAGE ini is set to A then an attempt to send messages is made unless a value of N is supplied for this field (if Y is supplied or this field is omitted then an attempt to send messages is made). If the ICOM_SEND_QUOTETOBOOK_MESSAGE ini is set to Y then sending messages is not attempted unless a value of Y is supplied for this field (if N is supplied or this field is omitted then there is no attempt to send messages). If the ICOM_SEND_QUOTETOBOOK_MESSAGE ini is set to N then sending messages is not attempted, no matter what is supplied for this field. If extensions are not enabled or this field is omitted, there is an attempt to send messages if the ICOM_SEND_QUOTETOBOOK_MESSAGE ini is set to A, and no attempt is made if it is Y or N. Optional.
+3 New Requests
+3.1 UpdateService
+All of the fields that can be updated in the UpdateService request are ones already covered in relation to AddService. Note that for fixed services all fields can be updated by an UpdateService request. For regular service lines, only the following fields can be updated: SequenceNumber, puTime, puRemark, puExternalPointID, doTime, doRemark, doExternalPointID, Remarks, SupplierConfirmation, TourplanServiceStatus, ServiceLineNotes.
+
+Note that pickup and dropoff fields (those with pu and do prefixes) cannot be changed for external rental car service lines.
+
+UpdateService can be used on fixed and normal service lines for internet bookings, and on normal service lines in non-internet bookings.
+
+3.2 GetCurrencyConversions
+This request returns details of currency conversion rates currently setup in Tourplan.
+
+Data item	Type	Description
+ReturnAllSubCodes	Boolean	If true, then conversions for all currency sub-codes are returned. If false, only conversions for the currency sub-code of the agent login used for the request are returned. Optional (defaults to false).
+In the response, a number of CurrencyConversionSet elements are returned, each with a FromCurrency, ToCurrency, CurrencySubCode and a series of CurrencyConversion elements containing the remaining data items. Entries are sorted in increasing order of FromCurrency, ToCurrency, CurrencySubCode, DateFrom.
+
+Data item	Type	Description
+FromCurrency	String (3)	From currency for this set of conversion rates.
+ToCurrency	String (3)	To currency for this set of conversion rates.
+CurrencySubCode	String	Currency sub-code for this set of conversion rates.
+DateFrom	Date	Date that this particular conversion applies from.
+DateTo	Date	Date that this particular conversion applies to.
+ConversionRate	Decimal (12 d.p.)	The conversion rate.
+IsMultiplier	Boolean	Whether conversion is done by multiplying (Y) or dividing by ConversionRate.
+3.3 GetBookingPaymentSummary
+This request accepts the standard parameters for identifying a booking, and returns a payment summary of the booking. Output data items are summarised in the table below. It also returns agent and retail pricing, broken down into the tax and tax-exclusive components (commission is the difference between the agent and retail totals).
+
+Data item	Type	Description
+Currency	String (3)	Booking currency. All amounts returned are in booking currency.
+InvoicedExclusive	Integer	Total amount invoiced for this booking (exclusive of Tax).
+InvoicedTax	Integer	Tax component of retail total.
+CreditsExclusive	Integer	Total value of credit notes issued for the booking (exclusive of Tax).
+CreditsTax	Integer	Tax component of credit notes issued.
+ReceivedExclusive	Integer	Total amount received for the booking (exclusive of Tax).
+ReceivedTax	Integer	Tax component of total amounts received.
+RetailExclusive	Integer	Retail total (exclusive of tax).
+RetailTax	Integer	Tax component of retail total.
+AgentExclusive	Integer	Agent total (exclusive of tax).
+AgentTax	Integer	Tax component of agent total.
+3.4 RecordBookingPayment
+This request records a payment against the specified booking, by creating a receipt for the given amount in the given currency. An invoice may be created as well. If the ICOM_MAKEPAYMENT_INVOICE INI setting is PaymentExact then an invoice is created that has the same currency and amount as the receipt. For other values of ICOM_MAKEPAYMENT_INVOICE, a booking currency invoice is created if the booking is not currently fully invoiced. If ICOM_MAKEPAYMENT_INVOICE is Payment and the receipt currency is the same as the booking currency then the invoice amount is the same as the receipt amount. Otherwise, the booking is fully invoiced in booking currency.
+
+MakePaymentInvoiceMode parameters overwrites ICOM_MAKEPAYMENT_INVOICE setting. If MakePaymentInvoiceMode is Deposit, a booking currency invoice and a receipt are created. Invoice created applys to service lines specified.
+
+This request accepts the standard parameters for identifying a booking, plus the ones in the following table.
+
+Data item	Type	Description
+Currency	String (3)	The currency the amount received is in (must be a valid currency for the agent). Optional (defaults to booking currency if not supplied).
+Amount	Integer	The amount received. Required.
+ReceiptAmountBookingCurrency	Integer	The amount received in booking currency. Should only be supplied if the invoice is in booking currency and the receipt is not. If supplied is used to work out the exchange rate to convert the receipt amount in receipt currency to the booking currency (which is also the invoice currency). If not supplied then the exchange rate in Tourplan is looked up. Note: if supplied then the "is the booking fully invoiced" check only totals invoices in booking currency.
+ReceiptType	String (6)	A valid Tourplan receipt type. Required.
+UDText1
+UDText2
+UDText3	String (60)	Three user defined text fields for information about the payment. Optional.
+TourplanBookingStatus	String (2)	Tourplan booking status. If supplied, then if the payment is successfully recorded, the Tourplan booking status is changed to the status specified (if not supplied the booking status does not change). Note, must be a valid Tourplan booking status. Optional.
+MakePaymentInvoiceMode	Booking, Payment, PaymentExact, Deposit	Make Payment Invoice Mode. Overwrites ICOM_MAKEPAYMENT_INVOICE INI setting. If Deposit is supplied, then a booking currency invoice is created and is applied to ServiceLineIds specified. after that, a receipt is created for the invoice with the same amount. Note, must be a valid MakePaymentInvoiceMode value.
+ServiceLineIds	A list of Integers	Service Line IDs. Only supported if MakePaymentInvoiceMode is sent as Deposit. The invoice created applys to the service lines specified. Required only if MakePaymentInvoiceMode is Deposit.
+One data item is returned.
+
+Data item	Type	Description
+ReceiptReference	String (20)	The Tourplan reference for the receipt created.
+3.5 GetSendSupplierMessage
+This request gets hostConnect to generate a supplier message for a nominated service line, and then to either send the message to the supplier or return the message back to the caller. Also, this request can change the service status of the service line.
+
+This request accepts the standard parameters for identifying a booking, plus the ones in the following table.
+
+Data item	Type	Description
+ServiceLineId	Integer	The service line that the supplier message will be generated for.
+MessageCode	String	The code of the message to send. The message code must be a valid booking supplier message code. If a MessageCode is not supplied then hostConnect determines which message to use. If the service option is auto-messaging enabled then the message to send is determined by auto-messaging defaults. Otherwise, the ICOM_MESSAGE_STATUS ini setting is used.
+Language	String	If possible, use the version of the message for the given language code. If there is no version of the message for that language, the default language version will be used.
+SendMethod	String	Preferred way of sending the message. One of E (send via e-mail) or R (do not send). Required.
+OutputFormat	String	Format that the message is returned in. One of txt (plain text), html, pdf or docx. Optional (defaults to txt). Ignored if SendMethod is not R. Also ignored for container messages, where the message definition determines the output format.
+TourplanSeviceStatus	String	
+If TourplanServiceStatus is supplied then the service status is updated to this value after the message has been generated and (if SendMethod is not R) sent. What happens if TourplanSeviceStatus is not supplied depends on other fields:
+
+If SendMethod is R then the service status is not changed. Otherwise,
+If MessageCode was not supplied then the new service status is determined by hostConnect (from auto-messaging defaults and the ICOM_MESSAGE_STATUS ini setting). Otherwise,
+It is an error not to specify TourplanServiceStatus (this happens if SendMethod is not R and a MessageCode was supplied).
+Note that the current and new service statuses must have the same values for the hold allocation and include in booking flags.
+
+SendToAddress
+SendToContactType	String	If SendMethod is not R, then one or other of these fields can be specified to tell hostConnect where to send the message. If SendToAddress is specified then it contains an email address. If SendToContactType is specified then supplier phone book entries of this type are looked up. Optional (if not specified then the ICOM_CONTACT_TYPE is used as SendToContactType).
+Subject	String	Subject to use for the email. Optional (default is to use the subject that is generated in the message).
+Data items returned are listed below. The message-related ones all appear within a MessageDetails element.
+
+Data item	Type	Description
+MessageCode	String	The message code used to generate the message.
+SendMethod	String	How the message was sent.
+Subject	String	The subject of the message sent. Only returned if SendMethod is R.
+OutputFormat	String	Format that the message is returned in. Only returned if SendMethod is R.
+Message	String	The message content. Only returned if SendMethod is R. For container messages the container part is not returned (only the main body of the message). Note that if the output format is PDF then the contents of message are encoded in base64 format.
+SendToAddress	String	The address the message was sent to (not returned where SendMethod is R).
+Status	String	The current hostConnect service status (following any changes in status caused by the GetSendSupplierMessage request).
+TourplanSeviceStatus	String	The current Tourplan service status (following any changes in status caused by the GetSendSupplierMessage request).
+3.6 GetAccountingMessage
+This request gets hostConnect to generate an accounting message for a nominated transaction associated with a booking.
+
+This request accepts the standard parameters for identifying a booking, plus the ones in the following table.
+
+Data item	Type	Description
+TransactionId	Integer	The transaction that the message will be generated for.
+MessageCode	String	The code of the message to send. The message code must be for a message whose type matches that of the transaction.
+Language	String	If possible, use the version of the message for the given language code. If there is no version of the message for that language, the default language version will be used.
+OutputFormat	String	Format that the message is returned in. One of txt (plain text), html, pdf or docx. Optional (defaults to html). Note that for container messages, if a format is specified in the message then the format specified in the message takes precedence.
+Data items returned are listed below.
+
+Data item	Type	Description
+OutputFormat	String	Format that the message is returned in. Note that for container messages, if a format is specified in the message then the format specified in the message takes precedence.
+Message	String	The message content. Note that if the output format is PDF then the contents of this field are encoded in base64 format.
+3.7 ExternalAirInfo
+This request allows external air service providers that have been configured in the host Tourplan system to be queried.
+
+The request has 2 styles of operations. The first is a search mode where minimal information about the dates and routing required can be provided and all matching routings and their pricing information are returned. There is a second Fare Breakdown mode that accepts data returned by the search response that enables a detailed fare breakdown for a specific Flight/Fare combination.
+
+The request accepts the following parameters.
+
+Input data items
+AgentID, Password. Also:
+
+Data item	Type	Description
+Info	String	Specifies the categories of flight/airfare data to return. Operates differently to its use in OptionInfo as it is a switch for either (S)earch level data or Fare (B)reakdown level data. An optional flag (R)ules can be added to bring back fare rule information if supported by the external provider.
+RoomConfigs	XML Element	The room configuration being priced. See the the AddService section for more information on RoomConfig. Note that PersonId cannot be specified in an ExternalAirInfo RoomConfig as it is only valid for booking operations, such as AddService (people are attached to bookings).
+Branch
+Department
+SalesAnalysis1 to
+SalesAnalysis6	Strings	These fields are all optional. By default costing is done in the context of a booking made with the default values for all of these fields. For each one supplied, the value supplied is used instead of the default in the costing process.
+FlightSector	XML Element	Details of the flight sector being requested. At least one must be provided and if more than one is provided then the pricing information return will be for all sectors, that is the entire routing.
+Token	String	An array of encoded Tokens that the external flight engines require for subsequent operations.
+RateId	String	A RateId element returned by a previous ExternalAirInfo request can be supplied as an input parameter. and only rates associated with the specified RateId are returned. Would be used when Info=B to ensure correct Form of Payment information is sent to the external system
+CreditCardDetails	XML Element	When requesting with Info=B then credit card details can be sent to ensure the correct total is returned from the external system. See AddService for details of the contents.
+The FlightSector element consists of:
+
+Data item	Type	Description
+Origin	String	Start point for the flight
+Destination	String	End point for the flight. The external air provider will be searched for all flights/fares between each pair of Origin and Destination values. For example SYD-BNE and BNE-SYD will return all SYD-BNE and BNE-SYD flights that can be booked in conjunction with each other.
+Depart_Date	Date	Date that the flight is departing
+Depart_Time	Time	Optional time of flight departure
+Carrier	String (2)	Carrier code. This is expected to be one of the carrier codes defined in the host Tourplan system and will be mapped to a Tourplan supplier code.
+SupplierCode	String (6)	An alternative to the Carrier code. Mapping data in Tourplan will associate carriers and suppliers and so normal usage of the interface will be to provide suppliers or carriers rather than both.
+Flight	Integer	Flight number for the sector to be flown. Optional, and not expected to be supplied for a general search.
+SectorSequence	Integer	
+A sequence number to indicate the grouping of sectors required to complete a single point to point journey. Only required when Info=B.
+
+Some flight requests will result in options for direct and indirect flights SectorSequence will pair these together. For example a Hobart-Brisbane request may result in HOB-BNE Direct and HOB-MEL-BNE Indirect flights being offered. The HOB-MEL and MEL-BNE sectors will share the same SectorSequence value, indicating that they operate as a pair to complete the requested HOB-MEL journey.
+
+Data items returned are listed below.
+
+Data item	Type	Description
+FlightRouting	XML Element	Element that describes the collection of flights/sectors that could be used to complete the routing requested.
+The FlightRouting element consists of:
+
+Data item	Type	Description
+FlightSectorResults	XML Element	Element that describes the individual sectors making up the selected routing. Routings for direct flights will contain a FlightSectorResult and associated airfares. Where routings have indirect flights then the routing will contain multiple FlightSectorResults covering all of the flights required to complete the journey.
+AirFare	XML Element	Element that describes the available fare structures for a flight routing, including all tax and additional fee charges.
+The FlightSectorResults element consists of:
+
+Data item	Type	Description
+Origin	String (3)	Start point for the flight
+Destination	String (3)	End point for the flight. The external air provider will be searched for all flights/fares between each pair of Origin and Destination values. For example SYD-BNE and BNE-SYD will return all SYD-BNE and BNE-SYD flights that can be booked in conjunction with each other.
+Depart_Date	Date	Date that the flight is departing
+Depart_Time	Time	Time of flight departure
+Carrier	String (2)	Carrier code. This is expected to be one of the carrier codes defined in the host Tourplan system and will be mapped to a Tourplan supplier code.
+SupplierCode	String (6)	This is the Tourplan supplier code as determined by the mapping data between that and the carrier code in Tourplan
+Flight	Integer	Flight number for the sector to be flown.
+Arrive_Date	Date	The date, in local time, that the flight is expected to arrive.
+Arrive_Time	Time	The local time at which the flight is expected to arrive
+OriginTerminal	String	The terminal name/number the flight is departing from
+DestinationTerminal	String	The terminal name/number the flight is arriving at
+AircraftType	String	The type of aircraft servicing this sector
+FlightDuration	String	The expected flight time
+SectorSequence	Integer	
+A sequence number to indicate the grouping of sectors required to complete a single point to point journey.
+
+Some flight requests will result in options for direct and indirect flights SectorSequence will pair these together. For example a Hobart-Brisbane request may result in HOB-BNE Direct and HOB-MEL-BNE Indirect flights being offered. The HOB-MEL and MEL-BNE sectors will share the same SectorSequence value, indicating that they operate as a pair to complete the requested HOB-MEL journey.
+
+AirFare	XML Element	Element that describes the fare structure for a flight, including all tax and additional fee charges.
+The AirFare element consists of:
+
+Data item	Type	Description
+FareCode	String	The code by which the airline knows this fare detail as.
+FareName	String	The name that fare is known by, if the external air provider has supplied it
+RateId	String	The rate identifier in the external system and used to perform a look up into the Tourplan mapping data.
+PlatingCarrier	String (2)	The carrier on whose plate the tickets will be issued. Normally the same as the carrier but may vary in code sharing situations
+SupplierCode	String (6)	This is the Tourplan supplier code as determined by the mapping data between that and the PlatingCarrier code in Tourplan. This is the carrier that will actually issue the ticket and therefore charge for the flight rather than the airline that will operate the flight.
+CabinClass	String	Class of the flight, economy, business etc
+Currency	String (3)	The currency code that the amount is described in which will be the Agent currency used by HostConnect.
+TotalRateAmount	Decimal	Total tax Exclusive value for the flight for all pax specified
+TotalRateTax	Decimal	Total amount of accountable taxes chargeable for this flight
+TotalAgentAmount	Decimal	Total tax Exclusive value the Agent will pay for the flight for all pax specified
+TotalAgentTax	Decimal	Total amount of accountable taxes chargeable to the Agent for this flight
+CommissionPercentage	Decimal	Nominal commission that the agent has earnt. Note that the dollar value earnt is the difference between TotalRateAmount and TotalAgentAmount. As not all components of the fare are commissionable this may not match the percentage value returned.
+BaggageCount	Integer	The per person number of bags permitted with this flight/fare. The costs associated with bagage will be described in the fare detail itself.
+BaggageWeight	String	Maximum per person allowable baggage weight
+FareAmount	XML Element	Description of the various fare components that apply for this flight/fare
+Token	String	An array of encoded Tokens that the external flight engines require for subsequent operations.
+FareRule	String	An array of fare rule information that apply for this flight/fare.
+The FareAmount element consists of:
+
+Data item	Type	Description
+AppliesTo	String	
+A string value describing the type of passenger that this fare component applies to. Valid values are:
+
+PerAdult	The charge described applies per adult pax
+PerChild	The charge described applies per child pax
+PerInfant	The charge described applies per infant pax
+PerPax	The charge described applies per pax, regardless of classification
+OneOff	The charge described is a one off fee, normally things like booking credit card fees etc
+AmountType	String	
+The type of amount being described. Will be one of:
+
+Fare	The amount describes a fare value
+Tax	The amount describes a tax value
+Surcharge	The amount describes a surcharge value. Surcharges are information only have have already been included in the equivalent Fare amount value. They are used for items that are compulsory when booking this fare and are expected to be pax or pax type based.
+Fee	The amount describes an additional fee that may be chargeable. Similar to surcharges, but the value described is not already included in the Fare of the equivalent type.
+StandardBaggage	The amount describes the standard baggage allowance costs if not included in the fare.
+OptionalExtra	The amount describes an optional extra, these items are not part of the fare makeup but can be added to it to select the extra item/service if required.
+AmountCode	String	A code returned to further categorise the AmountType. In the case of Tax amounts it will contain the tax code whilst for Fare amounts it will repeat the code, Per Adult Fare or Per Child Fare etc. For Fee, Surcharge, StandardBaggage and OptionalExtra amounts it will contain a descriptive code returned from the external system.
+RateAmount	Decimal	The value of the Fare component. This is the amount that the agent will be charged.
+AgentAmount	Decimal	The value of the Fare component to the Agent. This is the amount that the agent will be charged.
+Commissionable	Boolean	Indicator as to whether this item attracted agent commission.
+Token	String	An array of encoded Tokens that the external flight engines require for subsequent operations.
+The FareRule element consists of:
+
+Data item	Type	Description
+RuleAppliesTo	String	
+A string value describing the type of passenger that this fare rule component applies to. Valid values are:
+
+Adult	The rules applies to adult fares
+Child	The rules applies to child fares
+Infant	The rules applies to infant fares
+All	The rules applies to all pax class fares
+RuleType	String	A string value that specifies the type/class of the rule.
+RuleCategory	String	A code returned to further categorise the AmountType.
+RuleBody	String	The rule body text, passed through in whatever format was supplied by the external system.
+3.8 SetServicePrice
+Used to update the retail and agent amounts of a service line.
+
+Input data items
+AgentID, Password, booking identifier. Also:
+
+Data item	Type	Description
+ServiceLineId	Integer	Service line identifier.
+LinePrice	Integer	New tax inclusive retail price (in cents). Required
+AgentPrice	Integer	New tax inclusive agent price (in cents). Required
+3.9 Admin
+Used for various hostConnect administration tasks
+
+Input data items
+Data item	Type	Description
+Login	String	Consists of "tourplan." followed by a Tourplan login that has the "hostConnect Admin" access right.
+Password	String	Password of the Tourplan login
+ReloadData	Boolean	If true then hostConnect reloads the data it caches, and attempts to load registrations from conn.v2classes. The Admin request does not return until the new data has been loaded.
+Output data items
+Data item	Type	Description
+RegistrationsLastLoadDateTim	UTC timestamp	When the registrations data currently in use was loaded. Registrations either come from conn.v2classes or are a default set of registrations granting local access.
+RegistrationsFileLastUpdateDateTime	UTC timestamp	Returned if the current set of registration were loaded from conn.v2classes (in which case the value is the last modification time of the file).
+4 Accessing package service lines
+The standard hostConnect behaviour for packages is that only one service line is returned (that of the package header). The LinePrice returned is the line price of the package, and the Status is the least available status across all of the package service lines. When optional services were introduced, this behaviour was changed so that service lines that are optional in the package are returned as separate service lines by hostConnect.
+
+It is now possible to ask to for "standard" package service lines (those that are not optional in the package definition) using the GetBooking field ReturnPackageServices. If ReturnPackageServices is Y then:
+
+Standard package service lines are returned as well as package service lines that are optional in the package definition. For each package service line the field IsStandardPackageLine indicates whether the package service line is a standard one or an optional part of the package.
+
+For a package header service line, SubServiceLineIds contains service line ids of standard package service lines as well as the ids of originally optional package service lines.
+
+The LinePrice of the package header service line is the selling price of the standard service lines (as per normal). The LinePrice fields of all of the standard package service lines will either by 0, or add up to the package.
+
+The hostConnect operations available on standard package service lines are somewhat limited. Only UpdateService and SendSupplierMessage can be used on package service lines.
+
+It is possible for a package to be optional (either the top level package, or a package that is a component of a top level package). In this case, optional services within an optional packages are returned, but they cannot be manipulated in any way. Also, each IsStandardPackageLine value for a service in an optional package shows whether the service is optional or not in the context of that package.
