@@ -2,6 +2,36 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HostConnectClient, formatResponse, optionalElement, formatOptCode } from "../services/hostconnect-client.js";
 
+const VALID_INFO_CODES = new Set(['G','A','I','E','R','S','D','B','N','T','F','M','L','P','V']);
+const RATE_TYPE_CODES = ['R','S','D'];
+const S_EXCLUDES = ['A','E','I'];
+
+function refineInfoCombination(val: string, ctx: z.RefinementCtx): void {
+  if (val.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "info must not be empty." });
+    return;
+  }
+  const duplicates = [...val].filter((ch, i) => val.indexOf(ch) !== i);
+  if (duplicates.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `No duplicate codes allowed. Duplicate(s): ${[...new Set(duplicates)].join(", ")}.` });
+    return;
+  }
+  const invalid = [...val].filter(ch => !VALID_INFO_CODES.has(ch));
+  if (invalid.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Unknown code(s): ${invalid.join(", ")}. Valid codes: G A I E R S D B N T F M L P V.` });
+    return;
+  }
+  const rateTypes = RATE_TYPE_CODES.filter(c => val.includes(c));
+  if (rateTypes.length > 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Only one rate type allowed per call. Found: ${rateTypes.join(", ")}. Choose one of R, S, or D.` });
+    return;
+  }
+  const sConflicts = S_EXCLUDES.filter(c => val.includes(c));
+  if (val.includes('S') && sConflicts.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `S (stay pricing) cannot combine with availability codes. Remove: ${sConflicts.join(", ")}.` });
+  }
+}
+
 export function registerInfoTools(server: McpServer, client: HostConnectClient): void {
 
   // ── PING ──────────────────────────────────────────────────────────────────
@@ -86,7 +116,7 @@ Args:
   - supplierName (string): Filter by supplier name. Optional.
   - locationCode (string): 3-char Tourplan location code to filter by location (e.g. "BKK"). Optional.
   - endLocationCode (string): End location for point-to-point services. Optional.
-  - info (string): Type of info to return. Values: "G"=general, "P"=prices, "S"=stay prices, "A"=availability, "E"=full availability, "F"=full info. Optional.
+  - info (string): Combined info codes — concatenate letters to retrieve all needed data in one call. E.g. "GR" (description + rates), "GRA" (+ availability), "GRFM" (+ FYIs + amenities). Rules: only one of R/S/D per call; S cannot combine with A/E/I. See inputSchema description for full code list. Optional.
   - dateFrom (string): Start date in YYYY-MM-DD format. Optional.
   - dateTo (string): End date in YYYY-MM-DD format. Optional.
   - scuQty (number): Number of service charge units (nights, days, etc.). Optional.
@@ -109,7 +139,45 @@ Returns:
         supplierName: z.string().optional().describe("Filter by supplier name"),
         locationCode: z.string().max(3).optional().describe("3-char location code (e.g. 'AKL')"),
         endLocationCode: z.string().max(3).optional().describe("End location for point-to-point services"),
-        info: z.enum(["G", "P", "S", "A", "E", "F"]).optional().describe("Info type: G=general, P=prices, S=stay, A=availability, E=full availability, F=full"),
+        info: z.string()
+          .superRefine(refineInfoCombination)
+          .optional()
+          .describe(
+            "Info codes to return — combine letters in a single string to retrieve all data in one call.\n" +
+            "\n" +
+            "Code meanings:\n" +
+            "  G = General info (description, supplier, class, pax rules)\n" +
+            "  A = Availability\n" +
+            "  I = Detailed availability\n" +
+            "  E = Full availability\n" +
+            "  R = Rates (rate schedule)\n" +
+            "  S = Stay pricing and availability\n" +
+            "  D = Rate date ranges\n" +
+            "  B = Package details\n" +
+            "  N = Enquiry notes\n" +
+            "  T = Multiple enquiry notes\n" +
+            "  F = FYIs\n" +
+            "  M = Amenities\n" +
+            "  L = Supplier replicated locations (codes only)\n" +
+            "  P = Supplier replicated locations with pickup points\n" +
+            "  V = Replicated locations encountered in search\n" +
+            "\n" +
+            "Combination rules (strictly enforced):\n" +
+            "  • Only one rate type allowed: R, S, or D — never combine two or more of these\n" +
+            "  • If S is included, do not include A, E, or I\n" +
+            "  • If omitted, only option identifiers and ValidLocations are returned\n" +
+            "\n" +
+            "Efficiency examples:\n" +
+            "  'GR'   → description + rates (minimum for search + price)\n" +
+            "  'GRA'  → description + rates + availability\n" +
+            "  'GRFM' → description + rates + FYIs + amenities\n" +
+            "  'GS'   → description + stay pricing (no separate availability)\n" +
+            "  'GD'   → description + rate date ranges\n" +
+            "\n" +
+            "Invalid combinations:\n" +
+            "  'RS', 'RD', 'SD' → ❌ two rate types\n" +
+            "  'SA', 'SE', 'SI' → ❌ S excludes availability codes"
+          ),
         dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Start date YYYY-MM-DD"),
         dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("End date YYYY-MM-DD"),
         scuQty: z.number().int().min(1).optional().describe("Number of nights/days/units"),
@@ -185,26 +253,6 @@ Returns:
           }
         }
 
-        // Warn when info=P was requested but no pricing/RateId was returned.
-        // This happens when rates are not configured in Tourplan for that service —
-        // the server returns option metadata but omits all Rate/RateId fields.
-        if (params.info === "P" && hasOptions) {
-          const options: unknown[] = Array.isArray(optReply.Option)
-            ? optReply.Option
-            : [optReply.Option];
-          const hasRates = options.some((o: unknown) => {
-            if (typeof o !== "object" || o === null) return false;
-            const opt = o as Record<string, unknown>;
-            return opt["RateId"] != null || opt["Rate"] != null || opt["Rates"] != null;
-          });
-          if (!hasRates) {
-            responseText +=
-              "\n\n⚠️  WARNING: info=P (prices) was requested but no RateId or Rate data " +
-              "was returned for any option. This typically means rates are not loaded in " +
-              "Tourplan for this service. You will need to use rateId='Default' when calling " +
-              "hostconnect_add_service rather than a RateId obtained from this call.";
-          }
-        }
       }
 
       return { content: [{ type: "text", text: responseText }] };
