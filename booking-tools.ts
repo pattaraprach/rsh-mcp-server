@@ -9,7 +9,8 @@ const RoomConfigSchema = z.object({
   roomType: z.string().optional().describe("Room type code"),
 });
 
-export function registerBookingTools(server: McpServer, client: HostConnectClient): void {
+// ── READ-ONLY BOOKING TOOLS ────────────────────────────────────────────────────
+export function registerReadOnlyBookingTools(server: McpServer, client: HostConnectClient): void {
 
   // ── GET BOOKING ────────────────────────────────────────────────────────────
   server.registerTool(
@@ -90,6 +91,10 @@ Returns:
       return { content: [{ type: "text", text: formatResponse(result) }] };
     }
   );
+}
+
+// ── WRITE BOOKING TOOLS ────────────────────────────────────────────────────────
+export function registerWriteBookingTools(server: McpServer, client: HostConnectClient): void {
 
   // ── ADD SERVICE (CREATE/ADD TO BOOKING) ────────────────────────────────────
   server.registerTool(
@@ -361,4 +366,10 @@ Returns:
       return { content: [{ type: "text", text: formatResponse(result) }] };
     }
   );
+}
+
+// ── COMBINED BOOKING TOOLS (for backward compatibility) ────────────────────────
+export function registerBookingTools(server: McpServer, client: HostConnectClient): void {
+  registerReadOnlyBookingTools(server, client);
+  registerWriteBookingTools(server, client);
 }

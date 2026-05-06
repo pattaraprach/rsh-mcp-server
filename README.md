@@ -48,6 +48,57 @@ This server exposes Tourplan HostConnect functionality as MCP tools, allowing AI
 | `hostconnect_get_payment_summary` | Get payment summary and balance |
 | `hostconnect_get_booking_message` | Retrieve booking documents (invoice, voucher, etc.) |
 
+## Read-Only Mode
+
+The server can be run in a restricted **read-only mode** that only allows read operations, preventing any modifications to bookings or services.
+
+### Enabling Read-Only Mode
+
+Set the `READ_ONLY_MODE` environment variable to `true`:
+
+```bash
+READ_ONLY_MODE=true npm start
+```
+
+### Use Cases
+
+- **Production deployments** where you want to prevent accidental modifications
+- **Demo environments** for showcasing capabilities without risk
+- **Audit/review scenarios** where data should not be altered
+- **Limited access** for users who only need to view booking information
+
+### Available Tools in Read-Only Mode
+
+When read-only mode is enabled, only these 11 tools are available:
+
+| Tool | Description |
+|------|-------------|
+| `hostconnect_ping` | Test connectivity |
+| `hostconnect_agent_info` | Get agent details |
+| `hostconnect_option_info` | Search available services |
+| `hostconnect_get_locations` | Get location codes |
+| `hostconnect_get_services` | Get service types |
+| `hostconnect_supplier_info` | Get supplier details |
+| `hostconnect_get_currency_conversions` | Get currency rates |
+| `hostconnect_get_booking` | Get booking details |
+| `hostconnect_list_bookings` | Search bookings |
+| `hostconnect_get_payment_summary` | Get payment summary |
+| `hostconnect_get_booking_message` | Get booking documents |
+
+### Tools Disabled in Read-Only Mode
+
+These 9 tools are disabled when read-only mode is active:
+
+- `hostconnect_add_service`
+- `hostconnect_update_booking`
+- `hostconnect_set_booking_remarks`
+- `hostconnect_quote_to_book`
+- `hostconnect_update_service`
+- `hostconnect_delete_service`
+- `hostconnect_cancel_services`
+- `hostconnect_accept_service`
+- `hostconnect_record_payment`
+
 ## Setup
 
 ### Prerequisites
@@ -74,6 +125,7 @@ export HOSTCONNECT_PASSWORD="your_password"
 export TRANSPORT="stdio"          # or "http" for HTTP transport
 export PORT="3000"                 # only used when TRANSPORT=http
 export HOSTCONNECT_TIMEOUT_MS="30000"
+export READ_ONLY_MODE="true"      # enable read-only mode (disables write operations)
 ```
 
 ### Running
@@ -86,6 +138,11 @@ HOSTCONNECT_URL=http://... HOSTCONNECT_AGENT_ID=... HOSTCONNECT_PASSWORD=... npm
 **HTTP mode** (for remote/multi-client access):
 ```bash
 TRANSPORT=http HOSTCONNECT_URL=http://... HOSTCONNECT_AGENT_ID=... HOSTCONNECT_PASSWORD=... npm start
+```
+
+**Read-only mode** (prevents any modifications):
+```bash
+READ_ONLY_MODE=true HOSTCONNECT_URL=http://... HOSTCONNECT_AGENT_ID=... HOSTCONNECT_PASSWORD=... npm start
 ```
 
 ## Claude Desktop Configuration

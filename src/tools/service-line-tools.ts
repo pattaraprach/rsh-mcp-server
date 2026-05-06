@@ -2,7 +2,80 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HostConnectClient, formatResponse, optionalElement } from "../services/hostconnect-client.js";
 
-export function registerServiceLineTools(server: McpServer, client: HostConnectClient): void {
+// ── READ-ONLY SERVICE LINE TOOLS ───────────────────────────────────────────────
+export function registerReadOnlyServiceLineTools(server: McpServer, client: HostConnectClient): void {
+
+  // ── GET PAYMENT SUMMARY ────────────────────────────────────────────────────
+  server.registerTool(
+    "hostconnect_get_payment_summary",
+    {
+      title: "Get Booking Payment Summary",
+      description: `Retrieve the payment summary for a booking from Tourplan HostConnect.
+
+Args:
+  - ref (string): Booking reference. Use this OR bookingId.
+  - bookingId (number): Numeric booking ID. Use this OR ref.
+
+Returns:
+  JSON with payment summary including: TotalAmount, TotalTax, ReceivedTotal, BalanceDue, and individual payment transactions.`,
+      inputSchema: z.object({
+        ref: z.string().optional().describe("Booking reference"),
+        bookingId: z.number().int().optional().describe("Numeric booking ID"),
+      }).refine(d => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async (params) => {
+      const lines = ["<GetBookingPaymentSummaryRequest>", client.authXml()];
+      if (params.ref) lines.push(optionalElement("Ref", params.ref));
+      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
+      lines.push("</GetBookingPaymentSummaryRequest>");
+
+      const xml = client.buildRequest(lines.join("\n"));
+      const result = await client.post(xml);
+      return { content: [{ type: "text", text: formatResponse(result) }] };
+    }
+  );
+
+  // ── GET BOOKING MESSAGE ────────────────────────────────────────────────────
+  server.registerTool(
+    "hostconnect_get_booking_message",
+    {
+      title: "Get Booking Message",
+      description: `Retrieve a message/document for a booking from Tourplan HostConnect (e.g. voucher, invoice, itinerary).
+
+Args:
+  - ref (string): Booking reference. Use this OR bookingId.
+  - bookingId (number): Numeric booking ID. Use this OR ref.
+  - messageLabel (string): Label of the message type to retrieve (e.g. "INVOICE", "VOUCHER"). Use this OR messageCode.
+  - messageCode (string): Tourplan message code. Use this OR messageLabel.
+
+Returns:
+  JSON with the generated message/document content.`,
+      inputSchema: z.object({
+        ref: z.string().optional().describe("Booking reference"),
+        bookingId: z.number().int().optional().describe("Numeric booking ID"),
+        messageLabel: z.string().optional().describe("Message type label (e.g. 'INVOICE', 'VOUCHER')"),
+        messageCode: z.string().optional().describe("Tourplan message code"),
+      }).refine(d => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async (params) => {
+      const lines = ["<GetBookingMessageRequest>", client.authXml()];
+      if (params.ref) lines.push(optionalElement("Ref", params.ref));
+      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
+      if (params.messageLabel) lines.push(optionalElement("MessageLabel", params.messageLabel));
+      if (params.messageCode) lines.push(optionalElement("MessageCode", params.messageCode));
+      lines.push("</GetBookingMessageRequest>");
+
+      const xml = client.buildRequest(lines.join("\n"));
+      const result = await client.post(xml);
+      return { content: [{ type: "text", text: formatResponse(result) }] };
+    }
+  );
+}
+
+// ── WRITE SERVICE LINE TOOLS ──────────────────────────────────────────────────
+export function registerWriteServiceLineTools(server: McpServer, client: HostConnectClient): void {
 
   // ── AMEND SERVICE REMARKS ──────────────────────────────────────────────────
   // Uses AmendServiceRemarksRequest (not UpdateServiceRequest).
@@ -247,72 +320,10 @@ Returns:
       return { content: [{ type: "text", text: formatResponse(result) }] };
     }
   );
+}
 
-  // ── GET PAYMENT SUMMARY ────────────────────────────────────────────────────
-  server.registerTool(
-    "hostconnect_get_payment_summary",
-    {
-      title: "Get Booking Payment Summary",
-      description: `Retrieve the payment summary for a booking from Tourplan HostConnect.
-
-Args:
-  - ref (string): Booking reference. Use this OR bookingId.
-  - bookingId (number): Numeric booking ID. Use this OR ref.
-
-Returns:
-  JSON with payment summary including: TotalAmount, TotalTax, ReceivedTotal, BalanceDue, and individual payment transactions.`,
-      inputSchema: z.object({
-        ref: z.string().optional().describe("Booking reference"),
-        bookingId: z.number().int().optional().describe("Numeric booking ID"),
-      }).refine(d => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
-      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    },
-    async (params) => {
-      const lines = ["<GetBookingPaymentSummaryRequest>", client.authXml()];
-      if (params.ref) lines.push(optionalElement("Ref", params.ref));
-      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
-      lines.push("</GetBookingPaymentSummaryRequest>");
-
-      const xml = client.buildRequest(lines.join("\n"));
-      const result = await client.post(xml);
-      return { content: [{ type: "text", text: formatResponse(result) }] };
-    }
-  );
-
-  // ── GET BOOKING MESSAGE ────────────────────────────────────────────────────
-  server.registerTool(
-    "hostconnect_get_booking_message",
-    {
-      title: "Get Booking Message",
-      description: `Retrieve a message/document for a booking from Tourplan HostConnect (e.g. voucher, invoice, itinerary).
-
-Args:
-  - ref (string): Booking reference. Use this OR bookingId.
-  - bookingId (number): Numeric booking ID. Use this OR ref.
-  - messageLabel (string): Label of the message type to retrieve (e.g. "INVOICE", "VOUCHER"). Use this OR messageCode.
-  - messageCode (string): Tourplan message code. Use this OR messageLabel.
-
-Returns:
-  JSON with the generated message/document content.`,
-      inputSchema: z.object({
-        ref: z.string().optional().describe("Booking reference"),
-        bookingId: z.number().int().optional().describe("Numeric booking ID"),
-        messageLabel: z.string().optional().describe("Message type label (e.g. 'INVOICE', 'VOUCHER')"),
-        messageCode: z.string().optional().describe("Tourplan message code"),
-      }).refine(d => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
-      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    },
-    async (params) => {
-      const lines = ["<GetBookingMessageRequest>", client.authXml()];
-      if (params.ref) lines.push(optionalElement("Ref", params.ref));
-      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
-      if (params.messageLabel) lines.push(optionalElement("MessageLabel", params.messageLabel));
-      if (params.messageCode) lines.push(optionalElement("MessageCode", params.messageCode));
-      lines.push("</GetBookingMessageRequest>");
-
-      const xml = client.buildRequest(lines.join("\n"));
-      const result = await client.post(xml);
-      return { content: [{ type: "text", text: formatResponse(result) }] };
-    }
-  );
+// ── COMBINED SERVICE LINE TOOLS (for backward compatibility) ──────────────────
+export function registerServiceLineTools(server: McpServer, client: HostConnectClient): void {
+  registerReadOnlyServiceLineTools(server, client);
+  registerWriteServiceLineTools(server, client);
 }
