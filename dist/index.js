@@ -43430,6 +43430,34 @@ function formatResponse(result) {
 }
 
 // src/tools/info-tools.ts
+var VALID_INFO_CODES = /* @__PURE__ */ new Set(["G", "A", "I", "E", "R", "S", "D", "B", "N", "T", "F", "M", "L", "P", "V"]);
+var RATE_TYPE_CODES = ["R", "S", "D"];
+var S_EXCLUDES = ["A", "E", "I"];
+function refineInfoCombination(val, ctx) {
+  if (val.length === 0) {
+    ctx.addIssue({ code: external_exports.ZodIssueCode.custom, message: "info must not be empty." });
+    return;
+  }
+  const duplicates = [...val].filter((ch, i) => val.indexOf(ch) !== i);
+  if (duplicates.length > 0) {
+    ctx.addIssue({ code: external_exports.ZodIssueCode.custom, message: `No duplicate codes allowed. Duplicate(s): ${[...new Set(duplicates)].join(", ")}.` });
+    return;
+  }
+  const invalid = [...val].filter((ch) => !VALID_INFO_CODES.has(ch));
+  if (invalid.length > 0) {
+    ctx.addIssue({ code: external_exports.ZodIssueCode.custom, message: `Unknown code(s): ${invalid.join(", ")}. Valid codes: G A I E R S D B N T F M L P V.` });
+    return;
+  }
+  const rateTypes = RATE_TYPE_CODES.filter((c) => val.includes(c));
+  if (rateTypes.length > 1) {
+    ctx.addIssue({ code: external_exports.ZodIssueCode.custom, message: `Only one rate type allowed per call. Found: ${rateTypes.join(", ")}. Choose one of R, S, or D.` });
+    return;
+  }
+  const sConflicts = S_EXCLUDES.filter((c) => val.includes(c));
+  if (val.includes("S") && sConflicts.length > 0) {
+    ctx.addIssue({ code: external_exports.ZodIssueCode.custom, message: `S (stay pricing) cannot combine with availability codes. Remove: ${sConflicts.join(", ")}.` });
+  }
+}
 function registerInfoTools(server, client) {
   server.registerTool(
     "hostconnect_ping",
@@ -43507,7 +43535,7 @@ Args:
   - supplierName (string): Filter by supplier name. Optional.
   - locationCode (string): 3-char Tourplan location code to filter by location (e.g. "BKK"). Optional.
   - endLocationCode (string): End location for point-to-point services. Optional.
-  - info (string): Type of info to return. Values: "G"=general, "P"=prices, "S"=stay prices, "A"=availability, "E"=full availability, "F"=full info. Optional.
+  - info (string): Combined info codes \u2014 concatenate letters to retrieve all needed data in one call. E.g. "GR" (description + rates), "GRA" (+ availability), "GRFM" (+ FYIs + amenities). Rules: only one of R/S/D per call; S cannot combine with A/E/I. See inputSchema description for full code list. Optional.
   - dateFrom (string): Start date in YYYY-MM-DD format. Optional.
   - dateTo (string): End date in YYYY-MM-DD format. Optional.
   - scuQty (number): Number of service charge units (nights, days, etc.). Optional.
@@ -43530,7 +43558,9 @@ Returns:
         supplierName: external_exports.string().optional().describe("Filter by supplier name"),
         locationCode: external_exports.string().max(3).optional().describe("3-char location code (e.g. 'AKL')"),
         endLocationCode: external_exports.string().max(3).optional().describe("End location for point-to-point services"),
-        info: external_exports.enum(["G", "P", "S", "A", "E", "F"]).optional().describe("Info type: G=general, P=prices, S=stay, A=availability, E=full availability, F=full"),
+        info: external_exports.string().superRefine(refineInfoCombination).optional().describe(
+          "Info codes to return \u2014 combine letters in a single string to retrieve all data in one call.\n\nCode meanings:\n  G = General info (description, supplier, class, pax rules)\n  A = Availability\n  I = Detailed availability\n  E = Full availability\n  R = Rates (rate schedule)\n  S = Stay pricing and availability\n  D = Rate date ranges\n  B = Package details\n  N = Enquiry notes\n  T = Multiple enquiry notes\n  F = FYIs\n  M = Amenities\n  L = Supplier replicated locations (codes only)\n  P = Supplier replicated locations with pickup points\n  V = Replicated locations encountered in search\n\nCombination rules (strictly enforced):\n  \u2022 Only one rate type allowed: R, S, or D \u2014 never combine two or more of these\n  \u2022 If S is included, do not include A, E, or I\n  \u2022 If omitted, only option identifiers and ValidLocations are returned\n\nEfficiency examples:\n  'GR'   \u2192 description + rates (minimum for search + price)\n  'GRA'  \u2192 description + rates + availability\n  'GRFM' \u2192 description + rates + FYIs + amenities\n  'GS'   \u2192 description + stay pricing (no separate availability)\n  'GD'   \u2192 description + rate date ranges\n\nInvalid combinations:\n  'RS', 'RD', 'SD' \u2192 \u274C two rate types\n  'SA', 'SE', 'SI' \u2192 \u274C S excludes availability codes"
+        ),
         dateFrom: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Start date YYYY-MM-DD"),
         dateTo: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("End date YYYY-MM-DD"),
         scuQty: external_exports.number().int().min(1).optional().describe("Number of nights/days/units"),
@@ -43580,17 +43610,6 @@ Returns:
             responseText += "\n\n\u26A0\uFE0F  WARNING: OptionInfoReply returned no options for this wildcard pattern. Ensure the pattern is padded to exactly 17 characters (e.g. 'BKKAC????????????' not 'BKKAC???????'). Short patterns silently miss options whose codes exceed the pattern length. The tool auto-pads wildcard patterns, so if you passed a shorter one it was already padded \u2014 the service/location/supplier combination may genuinely have no options.";
           } else {
             responseText += "\n\n\u2139\uFE0F  No options found. Try broadening your search criteria (e.g. remove date filters, use a wildcard opt pattern, or check the location/service codes).";
-          }
-        }
-        if (params.info === "P" && hasOptions) {
-          const options = Array.isArray(optReply.Option) ? optReply.Option : [optReply.Option];
-          const hasRates = options.some((o) => {
-            if (typeof o !== "object" || o === null) return false;
-            const opt = o;
-            return opt["RateId"] != null || opt["Rate"] != null || opt["Rates"] != null;
-          });
-          if (!hasRates) {
-            responseText += "\n\n\u26A0\uFE0F  WARNING: info=P (prices) was requested but no RateId or Rate data was returned for any option. This typically means rates are not loaded in Tourplan for this service. You will need to use rateId='Default' when calling hostconnect_add_service rather than a RateId obtained from this call.";
           }
         }
       }
@@ -43731,7 +43750,7 @@ var RoomConfigSchema = external_exports.object({
     "Individual passenger details \u2014 one PaxDetails entry per person. Must be used with roomConfigs (not the simple adults/children/infants fields). Include title, forename, surname, dateOfBirth, and paxType for each passenger."
   )
 });
-function registerBookingTools(server, client) {
+function registerReadOnlyBookingTools(server, client) {
   server.registerTool(
     "hostconnect_get_booking",
     {
@@ -43806,6 +43825,8 @@ Returns:
       return { content: [{ type: "text", text: formatResponse(result) }] };
     }
   );
+}
+function registerWriteBookingTools(server, client) {
   server.registerTool(
     "hostconnect_add_service",
     {
@@ -44051,9 +44072,77 @@ Returns:
     }
   );
 }
+function registerBookingTools(server, client) {
+  registerReadOnlyBookingTools(server, client);
+  registerWriteBookingTools(server, client);
+}
 
 // src/tools/service-line-tools.ts
-function registerServiceLineTools(server, client) {
+function registerReadOnlyServiceLineTools(server, client) {
+  server.registerTool(
+    "hostconnect_get_payment_summary",
+    {
+      title: "Get Booking Payment Summary",
+      description: `Retrieve the payment summary for a booking from Tourplan HostConnect.
+
+Args:
+  - ref (string): Booking reference. Use this OR bookingId.
+  - bookingId (number): Numeric booking ID. Use this OR ref.
+
+Returns:
+  JSON with payment summary including: TotalAmount, TotalTax, ReceivedTotal, BalanceDue, and individual payment transactions.`,
+      inputSchema: external_exports.object({
+        ref: external_exports.string().optional().describe("Booking reference"),
+        bookingId: external_exports.number().int().optional().describe("Numeric booking ID")
+      }).refine((d) => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+    },
+    async (params) => {
+      const lines = ["<GetBookingPaymentSummaryRequest>", client.authXml()];
+      if (params.ref) lines.push(optionalElement("Ref", params.ref));
+      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
+      lines.push("</GetBookingPaymentSummaryRequest>");
+      const xml = client.buildRequest(lines.join("\n"));
+      const result = await client.post(xml);
+      return { content: [{ type: "text", text: formatResponse(result) }] };
+    }
+  );
+  server.registerTool(
+    "hostconnect_get_booking_message",
+    {
+      title: "Get Booking Message",
+      description: `Retrieve a message/document for a booking from Tourplan HostConnect (e.g. voucher, invoice, itinerary).
+
+Args:
+  - ref (string): Booking reference. Use this OR bookingId.
+  - bookingId (number): Numeric booking ID. Use this OR ref.
+  - messageLabel (string): Label of the message type to retrieve (e.g. "INVOICE", "VOUCHER"). Use this OR messageCode.
+  - messageCode (string): Tourplan message code. Use this OR messageLabel.
+
+Returns:
+  JSON with the generated message/document content.`,
+      inputSchema: external_exports.object({
+        ref: external_exports.string().optional().describe("Booking reference"),
+        bookingId: external_exports.number().int().optional().describe("Numeric booking ID"),
+        messageLabel: external_exports.string().optional().describe("Message type label (e.g. 'INVOICE', 'VOUCHER')"),
+        messageCode: external_exports.string().optional().describe("Tourplan message code")
+      }).refine((d) => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+    },
+    async (params) => {
+      const lines = ["<GetBookingMessageRequest>", client.authXml()];
+      if (params.ref) lines.push(optionalElement("Ref", params.ref));
+      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
+      if (params.messageLabel) lines.push(optionalElement("MessageLabel", params.messageLabel));
+      if (params.messageCode) lines.push(optionalElement("MessageCode", params.messageCode));
+      lines.push("</GetBookingMessageRequest>");
+      const xml = client.buildRequest(lines.join("\n"));
+      const result = await client.post(xml);
+      return { content: [{ type: "text", text: formatResponse(result) }] };
+    }
+  );
+}
+function registerWriteServiceLineTools(server, client) {
   server.registerTool(
     "hostconnect_update_service",
     {
@@ -44267,68 +44356,10 @@ Returns:
       return { content: [{ type: "text", text: formatResponse(result) }] };
     }
   );
-  server.registerTool(
-    "hostconnect_get_payment_summary",
-    {
-      title: "Get Booking Payment Summary",
-      description: `Retrieve the payment summary for a booking from Tourplan HostConnect.
-
-Args:
-  - ref (string): Booking reference. Use this OR bookingId.
-  - bookingId (number): Numeric booking ID. Use this OR ref.
-
-Returns:
-  JSON with payment summary including: TotalAmount, TotalTax, ReceivedTotal, BalanceDue, and individual payment transactions.`,
-      inputSchema: external_exports.object({
-        ref: external_exports.string().optional().describe("Booking reference"),
-        bookingId: external_exports.number().int().optional().describe("Numeric booking ID")
-      }).refine((d) => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
-      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
-    },
-    async (params) => {
-      const lines = ["<GetBookingPaymentSummaryRequest>", client.authXml()];
-      if (params.ref) lines.push(optionalElement("Ref", params.ref));
-      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
-      lines.push("</GetBookingPaymentSummaryRequest>");
-      const xml = client.buildRequest(lines.join("\n"));
-      const result = await client.post(xml);
-      return { content: [{ type: "text", text: formatResponse(result) }] };
-    }
-  );
-  server.registerTool(
-    "hostconnect_get_booking_message",
-    {
-      title: "Get Booking Message",
-      description: `Retrieve a message/document for a booking from Tourplan HostConnect (e.g. voucher, invoice, itinerary).
-
-Args:
-  - ref (string): Booking reference. Use this OR bookingId.
-  - bookingId (number): Numeric booking ID. Use this OR ref.
-  - messageLabel (string): Label of the message type to retrieve (e.g. "INVOICE", "VOUCHER"). Use this OR messageCode.
-  - messageCode (string): Tourplan message code. Use this OR messageLabel.
-
-Returns:
-  JSON with the generated message/document content.`,
-      inputSchema: external_exports.object({
-        ref: external_exports.string().optional().describe("Booking reference"),
-        bookingId: external_exports.number().int().optional().describe("Numeric booking ID"),
-        messageLabel: external_exports.string().optional().describe("Message type label (e.g. 'INVOICE', 'VOUCHER')"),
-        messageCode: external_exports.string().optional().describe("Tourplan message code")
-      }).refine((d) => d.ref || d.bookingId, { message: "Either ref or bookingId must be provided" }),
-      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
-    },
-    async (params) => {
-      const lines = ["<GetBookingMessageRequest>", client.authXml()];
-      if (params.ref) lines.push(optionalElement("Ref", params.ref));
-      else if (params.bookingId) lines.push(optionalElement("BookingId", params.bookingId));
-      if (params.messageLabel) lines.push(optionalElement("MessageLabel", params.messageLabel));
-      if (params.messageCode) lines.push(optionalElement("MessageCode", params.messageCode));
-      lines.push("</GetBookingMessageRequest>");
-      const xml = client.buildRequest(lines.join("\n"));
-      const result = await client.post(xml);
-      return { content: [{ type: "text", text: formatResponse(result) }] };
-    }
-  );
+}
+function registerServiceLineTools(server, client) {
+  registerReadOnlyServiceLineTools(server, client);
+  registerWriteServiceLineTools(server, client);
 }
 
 // src/index.ts
@@ -44337,6 +44368,7 @@ var AGENT_ID = process.env.HOSTCONNECT_AGENT_ID;
 var PASSWORD = process.env.HOSTCONNECT_PASSWORD;
 var TRANSPORT = process.env.TRANSPORT || "stdio";
 var PORT = parseInt(process.env.PORT || "3000");
+var READ_ONLY_MODE = process.env.READ_ONLY_MODE === "true";
 if (!HOSTCONNECT_URL || !AGENT_ID || !PASSWORD) {
   console.error(
     "Error: Required environment variables missing.\nPlease set:\n  HOSTCONNECT_URL  - HostConnect endpoint URL (e.g. http://your-server/hostConnect)\n  HOSTCONNECT_AGENT_ID - Agent login ID\n  HOSTCONNECT_PASSWORD - Agent password"
@@ -44355,8 +44387,13 @@ function createServer() {
     version: "1.0.0"
   });
   registerInfoTools(server, hostConnectClient);
-  registerBookingTools(server, hostConnectClient);
-  registerServiceLineTools(server, hostConnectClient);
+  if (READ_ONLY_MODE) {
+    registerReadOnlyBookingTools(server, hostConnectClient);
+    registerReadOnlyServiceLineTools(server, hostConnectClient);
+  } else {
+    registerBookingTools(server, hostConnectClient);
+    registerServiceLineTools(server, hostConnectClient);
+  }
   return server;
 }
 async function runStdio() {
@@ -44364,6 +44401,9 @@ async function runStdio() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("HostConnect MCP server running on stdio");
+  if (READ_ONLY_MODE) {
+    console.error("Running in READ-ONLY mode - write operations are disabled");
+  }
 }
 async function runHTTP() {
   const app = (0, import_express.default)();
@@ -44379,10 +44419,18 @@ async function runHTTP() {
     await transport.handleRequest(req, res, req.body);
   });
   app.get("/health", (_req, res) => {
-    res.json({ status: "ok", server: "hostconnect-mcp-server", version: "1.0.0" });
+    res.json({
+      status: "ok",
+      server: "hostconnect-mcp-server",
+      version: "1.0.0",
+      readOnlyMode: READ_ONLY_MODE
+    });
   });
   app.listen(PORT, () => {
     console.error(`HostConnect MCP server running on http://localhost:${PORT}/mcp`);
+    if (READ_ONLY_MODE) {
+      console.error("Running in READ-ONLY mode - write operations are disabled");
+    }
   });
 }
 if (TRANSPORT === "http") {
