@@ -6,16 +6,30 @@ const VALID_INFO_CODES = new Set(['G','A','I','E','R','S','D','B','N','T','F','M
 const RATE_TYPE_CODES = ['R','S','D'];
 const S_EXCLUDES = ['A','E','I'];
 
-function validateInfoCombination(val: string): boolean {
-  if (val.length === 0) return false;
-  if (new Set(val).size !== val.length) return false;  // no duplicate codes
-  for (const ch of val) {
-    if (!VALID_INFO_CODES.has(ch)) return false;
+function refineInfoCombination(val: string, ctx: z.RefinementCtx): void {
+  if (val.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "info must not be empty." });
+    return;
+  }
+  const duplicates = [...val].filter((ch, i) => val.indexOf(ch) !== i);
+  if (duplicates.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `No duplicate codes allowed. Duplicate(s): ${[...new Set(duplicates)].join(", ")}.` });
+    return;
+  }
+  const invalid = [...val].filter(ch => !VALID_INFO_CODES.has(ch));
+  if (invalid.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Unknown code(s): ${invalid.join(", ")}. Valid codes: G A I E R S D B N T F M L P V.` });
+    return;
   }
   const rateTypes = RATE_TYPE_CODES.filter(c => val.includes(c));
-  if (rateTypes.length > 1) return false;
-  if (val.includes('S') && S_EXCLUDES.some(c => val.includes(c))) return false;
-  return true;
+  if (rateTypes.length > 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Only one rate type allowed per call. Found: ${rateTypes.join(", ")}. Choose one of R, S, or D.` });
+    return;
+  }
+  const sConflicts = S_EXCLUDES.filter(c => val.includes(c));
+  if (val.includes('S') && sConflicts.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `S (stay pricing) cannot combine with availability codes. Remove: ${sConflicts.join(", ")}.` });
+  }
 }
 
 export function registerInfoTools(server: McpServer, client: HostConnectClient): void {
@@ -126,10 +140,7 @@ Returns:
         locationCode: z.string().max(3).optional().describe("3-char location code (e.g. 'AKL')"),
         endLocationCode: z.string().max(3).optional().describe("End location for point-to-point services"),
         info: z.string()
-          .refine(validateInfoCombination, {
-            message: "Invalid info combination. Valid codes: G A I E R S D B N T F M L P V. " +
-              "Only one of R/S/D allowed per call. S cannot combine with A, E, or I.",
-          })
+          .superRefine(refineInfoCombination)
           .optional()
           .describe(
             "Info codes to return — combine letters in a single string to retrieve all data in one call.\n" +
