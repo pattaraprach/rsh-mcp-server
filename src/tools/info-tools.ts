@@ -8,6 +8,7 @@ const S_EXCLUDES = ['A','E','I'];
 
 function validateInfoCombination(val: string): boolean {
   if (val.length === 0) return false;
+  if (new Set(val).size !== val.length) return false;  // no duplicate codes
   for (const ch of val) {
     if (!VALID_INFO_CODES.has(ch)) return false;
   }
@@ -241,26 +242,6 @@ Returns:
           }
         }
 
-        // Warn when info=P was requested but no pricing/RateId was returned.
-        // This happens when rates are not configured in Tourplan for that service —
-        // the server returns option metadata but omits all Rate/RateId fields.
-        if (params.info === "P" && hasOptions) {
-          const options: unknown[] = Array.isArray(optReply.Option)
-            ? optReply.Option
-            : [optReply.Option];
-          const hasRates = options.some((o: unknown) => {
-            if (typeof o !== "object" || o === null) return false;
-            const opt = o as Record<string, unknown>;
-            return opt["RateId"] != null || opt["Rate"] != null || opt["Rates"] != null;
-          });
-          if (!hasRates) {
-            responseText +=
-              "\n\n⚠️  WARNING: info=P (prices) was requested but no RateId or Rate data " +
-              "was returned for any option. This typically means rates are not loaded in " +
-              "Tourplan for this service. You will need to use rateId='Default' when calling " +
-              "hostconnect_add_service rather than a RateId obtained from this call.";
-          }
-        }
       }
 
       return { content: [{ type: "text", text: responseText }] };
