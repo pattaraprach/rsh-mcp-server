@@ -2,6 +2,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HostConnectClient, formatResponse, optionalElement, formatOptCode } from "../services/hostconnect-client.js";
 
+const VALID_INFO_CODES = new Set(['G','A','I','E','R','S','D','B','N','T','F','M','L','P','V']);
+const RATE_TYPE_CODES = ['R','S','D'];
+const S_EXCLUDES = ['A','E','I'];
+
+function validateInfoCombination(val: string): boolean {
+  if (val.length === 0) return false;
+  for (const ch of val) {
+    if (!VALID_INFO_CODES.has(ch)) return false;
+  }
+  const rateTypes = RATE_TYPE_CODES.filter(c => val.includes(c));
+  if (rateTypes.length > 1) return false;
+  if (val.includes('S') && S_EXCLUDES.some(c => val.includes(c))) return false;
+  return true;
+}
+
 export function registerInfoTools(server: McpServer, client: HostConnectClient): void {
 
   // ── PING ──────────────────────────────────────────────────────────────────
@@ -86,7 +101,7 @@ Args:
   - supplierName (string): Filter by supplier name. Optional.
   - locationCode (string): 3-char Tourplan location code to filter by location (e.g. "BKK"). Optional.
   - endLocationCode (string): End location for point-to-point services. Optional.
-  - info (string): Type of info to return. Values: "G"=general, "P"=prices, "S"=stay prices, "A"=availability, "E"=full availability, "F"=full info. Optional.
+  - info (string): Combined info codes — concatenate letters to retrieve all needed data in one call. E.g. "GR" (description + rates), "GRA" (+ availability), "GRFM" (+ FYIs + amenities). Rules: only one of R/S/D per call; S cannot combine with A/E/I. See inputSchema description for full code list. Optional.
   - dateFrom (string): Start date in YYYY-MM-DD format. Optional.
   - dateTo (string): End date in YYYY-MM-DD format. Optional.
   - scuQty (number): Number of service charge units (nights, days, etc.). Optional.
@@ -109,7 +124,48 @@ Returns:
         supplierName: z.string().optional().describe("Filter by supplier name"),
         locationCode: z.string().max(3).optional().describe("3-char location code (e.g. 'AKL')"),
         endLocationCode: z.string().max(3).optional().describe("End location for point-to-point services"),
-        info: z.enum(["G", "P", "S", "A", "E", "F"]).optional().describe("Info type: G=general, P=prices, S=stay, A=availability, E=full availability, F=full"),
+        info: z.string()
+          .refine(validateInfoCombination, {
+            message: "Invalid info combination. Valid codes: G A I E R S D B N T F M L P V. " +
+              "Only one of R/S/D allowed per call. S cannot combine with A, E, or I.",
+          })
+          .optional()
+          .describe(
+            "Info codes to return — combine letters in a single string to retrieve all data in one call.\n" +
+            "\n" +
+            "Code meanings:\n" +
+            "  G = General info (description, supplier, class, pax rules)\n" +
+            "  A = Availability\n" +
+            "  I = Detailed availability\n" +
+            "  E = Full availability\n" +
+            "  R = Rates (rate schedule)\n" +
+            "  S = Stay pricing and availability\n" +
+            "  D = Rate date ranges\n" +
+            "  B = Package details\n" +
+            "  N = Enquiry notes\n" +
+            "  T = Multiple enquiry notes\n" +
+            "  F = FYIs\n" +
+            "  M = Amenities\n" +
+            "  L = Supplier replicated locations (codes only)\n" +
+            "  P = Supplier replicated locations with pickup points\n" +
+            "  V = Replicated locations encountered in search\n" +
+            "\n" +
+            "Combination rules (strictly enforced):\n" +
+            "  • Only one rate type allowed: R, S, or D — never combine two or more of these\n" +
+            "  • If S is included, do not include A, E, or I\n" +
+            "  • If omitted, only option identifiers and ValidLocations are returned\n" +
+            "\n" +
+            "Efficiency examples:\n" +
+            "  'GR'   → description + rates (minimum for search + price)\n" +
+            "  'GRA'  → description + rates + availability\n" +
+            "  'GRFM' → description + rates + FYIs + amenities\n" +
+            "  'GS'   → description + stay pricing (no separate availability)\n" +
+            "  'GD'   → description + rate date ranges\n" +
+            "\n" +
+            "Invalid combinations:\n" +
+            "  'RS', 'RD', 'SD' → ❌ two rate types\n" +
+            "  'SA', 'SE', 'SI' → ❌ S excludes availability codes"
+          ),
         dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Start date YYYY-MM-DD"),
         dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("End date YYYY-MM-DD"),
         scuQty: z.number().int().min(1).optional().describe("Number of nights/days/units"),
